@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Livewire\Users;
+
+use App\Models\StaffDetail;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Livewire\Component;
+
+class AddStaff extends Component
+{
+    //User table Fields
+    public $employee_id = '';
+    public $email = '';
+    public $password = '';
+    public $confirmPassword = '';
+
+    //Staff Details table
+    public $first_name = '';
+    public $last_name = '';
+    public $department = '';
+    public $position = '';
+
+    protected function rules()
+    {
+        return [
+            //User validation
+            'employee_id' => 'required|string|max:255|unique:users,user_id|unique:staff_details,employee_id',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|min:8|same:confirmPassword',
+            'confirmPassword' => 'required',
+
+            //Staff details validation
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'department' => 'nullable|string|max:255',
+            'position' => 'nullable|string|max:255',
+        ];
+    }
+
+    public function submit() {
+        $this->validate();
+
+        try {
+            // Code to create user and staff detail records goes here
+            //Code to insert in users table
+            $user = User::create([
+                'user_id' => $this->employee_id,
+                'email' => $this->email,
+                'password' => Hash::make($this->password),
+                'role' => 'staff'
+            ]);
+
+            //Code to insert in staff_details table
+            StaffDetail::create([
+                'user_id' => $user->id,
+                'employee_id' => $this->employee_id,
+                'first_name' => $this->first_name,
+                'last_name' => $this->last_name,
+                'department' => $this->department,
+                'position' => $this->position,
+            ]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred while adding the staff member: ' . $e->getMessage());
+            return;
+            
+        }
+        session()->flash('success', 'Staff member added successfully.', redirect()->route('staff.index'));
+    }
+
+
+    public function render()
+    {
+        return view('livewire.users.add-staff');
+    }
+}
