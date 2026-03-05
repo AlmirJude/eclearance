@@ -124,6 +124,10 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+    public function studentGovernmentOfficerships(){
+        return $this->hasMany(StudentGovernmentOfficer::class, 'user_id');
+    }
+
     //Helper Methods
 
     public function getFullNameAttribute(): string {
@@ -143,7 +147,7 @@ class User extends Authenticatable
     }
 
     public function isSuperAdmin(){
-        return $this->role === 'super_admin';
+        return $this->role === 'superadmin';
     }
 
     public function isAdmin () {

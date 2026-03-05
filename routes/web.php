@@ -1,16 +1,32 @@
 <?php
 
+use App\Livewire\Clearance\SignatoryDashboard;
+use App\Livewire\Clearance\StudentDashboard;
+use App\Livewire\Clearance\SubmitRequirements;
 use App\Livewire\Club\AddClub;
 use App\Livewire\Club\ClubIndex;
+use App\Livewire\Club\ClubOverview;
 use App\Livewire\Club\EditClub;
+use App\Livewire\Club\ManageMembers;
+use App\Livewire\Club\ManageRequirements as ClubManageRequirements;
+use App\Livewire\Club\ManageSignatories as ClubManageSignatories;
+use App\Livewire\Clearance\ManagePeriods;
 use App\Livewire\Department\AddDepartment;
 use App\Livewire\Department\DepartmentEdit;
 use App\Livewire\Department\DepartmentIndex;
 use App\Livewire\Department\DepartmentOverview;
 use App\Livewire\Department\DepartmentStudents;
+use App\Livewire\Department\ManageSignatories;
+use App\Livewire\Homeroom\ManageAssignments;
+use App\Livewire\Homeroom\ManageRequirements as HomeroomManageRequirements;
 use App\Livewire\Office\AddOffice;
 use App\Livewire\Office\EditOffice;
 use App\Livewire\Office\OfficeIndex;
+use App\Livewire\Office\OfficeOverview;
+use App\Livewire\Office\ManageRequirements as OfficeManageRequirements;
+use App\Livewire\Office\ManageSignatories as OfficeManageSignatories;
+use App\Livewire\StudentGovernment\Index as StudentGovernmentIndex;
+use App\Livewire\StudentGovernment\ManageOfficers;
 use App\Livewire\Users\AddStaff;
 use App\Livewire\Users\AddStudent;
 use App\Livewire\Users\EditStaff;
@@ -49,15 +65,37 @@ Route::middleware(['auth', 'verified'])->group(function() {
 
         Route::get('/departments', DepartmentIndex::class) -> name('department.index') -> middleware('role:superadmin,admin');
         Route::get('/departments/add', AddDepartment::class) -> name('department.add') -> middleware('role:superadmin,admin');
-        Route::get('/departments/{id}/edit', DepartmentEdit::class) -> name('department.edit') -> middleware('role:superadmin,admin');
+        Route::get('/departments/{id}/edit', DepartmentEdit::class) -> name('department.edit') -> middleware('role:superadmin,admin,staff');
+        Route::get('/departments/{id}/signatories', ManageSignatories::class) -> name('department.signatories') -> middleware('role:superadmin,admin,staff');
 
         Route::get('/clubs', ClubIndex::class) -> name('club.index') -> middleware('role:superadmin,admin');
         Route::get('/clubs/add', AddClub::class) -> name('club.add') -> middleware('role:superadmin,admin');
-        Route::get('/clubs/{id}/edit', EditClub::class) -> name('club.edit')  -> middleware('role:superadmin,admin');
+        Route::get('/clubs/{id}/edit', EditClub::class) -> name('club.edit')  -> middleware('role:superadmin,admin,staff');
+        Route::get('/clubs/{id}/members', ManageMembers::class) -> name('club.members') -> middleware('role:superadmin,admin,staff,student');
+        Route::get('/clubs/{id}/signatories', ClubManageSignatories::class) -> name('club.signatories') -> middleware('role:superadmin,admin,staff');
+        Route::get('/clubs/{id}/requirements', ClubManageRequirements::class) -> name('club.requirements') -> middleware('role:superadmin,admin,staff,student');
 
         Route::get('/offices', OfficeIndex::class) -> name('office.index') -> middleware('role:superadmin,admin');
         Route::get('/offices/add', AddOffice::class) -> name('office.add') -> middleware('role:superadmin,admin');
-        Route::get('/offices/{id}/edit', EditOffice::class) -> name('office.edit') -> middleware('role:superadmin,admin');
+        Route::get('/offices/{id}/edit', EditOffice::class) -> name('office.edit') -> middleware('role:superadmin,admin,staff');
+        Route::get('/offices/{id}/signatories', OfficeManageSignatories::class) -> name('office.signatories') -> middleware('role:superadmin,admin,staff');
+        Route::get('/offices/{id}/requirements', OfficeManageRequirements::class) -> name('office.requirements') -> middleware('role:superadmin,admin,staff,student');
+
+        Route::get('/homeroom-assignments', ManageAssignments::class) -> name('homeroom.assignments') -> middleware('role:superadmin,admin');
+        Route::get('/homeroom-assignments/{id}/requirements', HomeroomManageRequirements::class) -> name('homeroom.requirements') -> middleware('role:superadmin,admin,staff');
+
+        Route::get('/student-government', StudentGovernmentIndex::class) -> name('student-government.index') -> middleware('role:superadmin,admin');
+        Route::get('/student-government/{studentGovernmentId}/officers', ManageOfficers::class) -> name('student-government.officers') -> middleware('role:superadmin,admin');
+
+        // Clearance Management
+        Route::get('/clearance-periods', ManagePeriods::class) -> name('clearance.periods') -> middleware('role:superadmin,admin');
+
+        // Student Clearance Dashboard
+        Route::get('/my-clearance', StudentDashboard::class) -> name('clearance.student') -> middleware('role:student');
+        Route::get('/my-clearance/{itemId}/requirements', SubmitRequirements::class) -> name('clearance.submit-requirements') -> middleware('role:student');
+
+        // Signatory Dashboard
+        Route::get('/signatory', SignatoryDashboard::class) -> name('clearance.signatory') -> middleware('role:superadmin,admin,staff,student');
 
         Route::prefix('department/{departmentId}')->middleware('role:superadmin,admin,staff')->group(function() {
             Route::get('/overview', DepartmentOverview::class)->name('department.overview');
@@ -67,19 +105,14 @@ Route::middleware(['auth', 'verified'])->group(function() {
         });
 
         // Club Routes (for moderators and signatories)
-        // Route::prefix('club/{clubId}')->middleware('role:superadmin,admin,staff')->group(function() {
-        //     Route::get('/overview', ClubOverview::class)->name('club.overview');
-        //     Route::get('/members', ClubMembers::class)->name('club.members');
-        //     Route::get('/clearances', ClubClearances::class)->name('club.clearances');
-        //     Route::get('/edit', ClubEdit::class)->name('club.edit');
-        // });
+        Route::prefix('club/{clubId}')->middleware('role:superadmin,admin,staff,student')->group(function() {
+            Route::get('/overview', ClubOverview::class)->name('club.overview');
+        });
 
         // Office Routes (for managers and signatories)
-        // Route::prefix('office/{officeId}')->middleware('role:superadmin,admin,staff')->group(function() {
-        //     Route::get('/overview', OfficeOverview::class)->name('office.overview');
-        //     Route::get('/clearances', OfficeClearances::class)->name('office.clearances');
-        //     Route::get('/edit', OfficeEdit::class)->name('office.edit');
-        // });
+        Route::prefix('office/{officeId}')->middleware('role:superadmin,admin,staff')->group(function() {
+            Route::get('/overview', OfficeOverview::class)->name('office.overview');
+        });
     });
 });
 

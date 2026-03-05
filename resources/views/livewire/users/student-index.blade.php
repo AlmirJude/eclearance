@@ -5,9 +5,17 @@
         <flux:separator variant="subtle" />
     </div>
 
-    <a href="{{  route("add.students")  }}" class="px-3 py-2 text-xs text-white bg-green-600 rounded hover:bg-green-700">
-        Add Student
-    </a>    
+    <div class="flex gap-2 flex-wrap">
+        <a href="{{  route('add.students')  }}" class="px-3 py-2 text-xs text-white bg-green-600 rounded hover:bg-green-700">
+            Add Student
+        </a>
+        <button wire:click="openImportModal" class="px-3 py-2 text-xs text-white bg-indigo-600 rounded hover:bg-indigo-700">
+            Import Students
+        </button>
+        <button wire:click="downloadSampleCsv" class="px-3 py-2 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">
+            Download Template
+        </button>
+    </div>
 
         @session('success')
             <div class="mb-4 mt-6 rounded-lg bg-green-100 border border-green-300 text-green-800 px-4 py-3 flex items-center justify-between" role="alert">
@@ -34,7 +42,7 @@
                     <tr class="border-b hover:bg-gray-50 transition">
                         <td class="px-6 py-2">{{$student -> student_id}}</td>
                         <td class="px-6 py-2">{{$student -> fullname}}</td>
-                        <td class="px-6 py-2">{{$student -> department}}</td>
+                        <td class="px-6 py-2">{{$student -> department_name}}</td>
                         <td class="px-6 py-2">{{$student -> year_level}}</td>
 
                         <td class="px-6 py-2 ">
@@ -48,7 +56,72 @@
         </table>
     </div>
 
-        {{-- Delete Modal --}}
+    {{-- Import CSV Modal --}}
+    <flux:modal name="import-csv-modal" class="min-w-[32rem]" wire:model="showImportModal">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Import Students</flux:heading>
+                <flux:text class="mt-1 text-gray-500 text-sm">
+                    Upload a <strong>CSV</strong> (.csv) or <strong>Excel</strong> (.xlsx, .xls) file with columns:
+                    <code class="bg-gray-100 px-1 rounded text-xs">student_id, email, password, first_name, last_name, department, year_level</code>.
+                    The <strong>department</strong> column accepts the abbreviation (e.g. BSCS) or full name.
+                </flux:text>
+            </div>
+
+            @if(!$importResults)
+                {{-- Upload form --}}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">CSV or Excel File</label>
+                        <input type="file" wire:model="csvFile" accept=".csv,.txt,.xlsx,.xls"
+                               class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                        @error('csvFile')
+                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                        @enderror
+                        <div wire:loading wire:target="csvFile" class="mt-1 text-xs text-gray-400">Uploading...</div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 justify-end">
+                    <flux:button variant="ghost" wire:click="closeImportModal">Cancel</flux:button>
+                    <flux:button variant="primary" wire:click="importCsv" wire:loading.attr="disabled" wire:target="importCsv">
+                        <span wire:loading.remove wire:target="importCsv">Import</span>
+                        <span wire:loading wire:target="importCsv">Importing...</span>
+                    </flux:button>
+                </div>
+            @else
+                {{-- Results --}}
+                <div class="space-y-3">
+                    <div class="flex gap-4">
+                        <div class="flex-1 rounded-lg bg-green-50 border border-green-200 p-3 text-center">
+                            <p class="text-2xl font-bold text-green-700">{{ $importResults['imported'] }}</p>
+                            <p class="text-xs text-green-600">Imported</p>
+                        </div>
+                        <div class="flex-1 rounded-lg bg-red-50 border border-red-200 p-3 text-center">
+                            <p class="text-2xl font-bold text-red-700">{{ $importResults['skipped'] }}</p>
+                            <p class="text-xs text-red-600">Skipped</p>
+                        </div>
+                    </div>
+
+                    @if(!empty($importResults['errors']))
+                        <div class="max-h-48 overflow-y-auto rounded-lg bg-red-50 border border-red-200 p-3 space-y-1">
+                            <p class="text-xs font-semibold text-red-700 mb-2">Errors / Skipped Rows</p>
+                            @foreach($importResults['errors'] as $err)
+                                <p class="text-xs text-red-600">{{ $err }}</p>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                <div class="flex gap-2 justify-end">
+                    <flux:button variant="ghost" wire:click="closeImportModal">Close</flux:button>
+                    <flux:button variant="primary" wire:click="$set('importResults', null)">Import Another File</flux:button>
+                </div>
+            @endif
+        </div>
+    </flux:modal>
+
+    {{-- Delete Modal --}}
     @if($selectedStudent)
         <flux:modal name="showDeleteModal" class="min-w-[22rem]" wire:model="showDeleteModal">
             <div class="space-y-6">
@@ -102,7 +175,7 @@
 
                 <div>
                     <flux:subheading class="text-xs text-gray-500">Department</flux:subheading>
-                    <p class="text-sm font-medium">{{ $selectedStudent->department ?? 'N/A' }}</p>
+                    <p class="text-sm font-medium">{{ $selectedStudent->department_name ?? 'N/A' }}</p>
                 </div>
 
                 <div>

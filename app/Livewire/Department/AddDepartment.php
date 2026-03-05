@@ -37,7 +37,7 @@ class AddDepartment extends Component
 
         Department::create([
             'name' => $this->name,
-            'Abbreviation' => $this->abbreviation,
+            'abbreviation' => $this->abbreviation,
             'description' => $this->description,
             'manager_id' => $this->manager_id,
         ]);

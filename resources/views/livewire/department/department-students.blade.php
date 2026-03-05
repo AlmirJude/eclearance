@@ -34,7 +34,7 @@
                     <tr class="border-b hover:bg-gray-50 transition">
                         <td class="px-6 py-2">{{$student -> student_id}}</td>
                         <td class="px-6 py-2">{{$student -> fullname}}</td>
-                        <td class="px-6 py-2">{{$student -> department}}</td>
+                        <td class="px-6 py-2">{{$student -> department_name ?? 'N/A'}}</td>
                         <td class="px-6 py-2">{{$student -> year_level}}</td>
 
                         <td class="px-6 py-2 ">
@@ -80,7 +80,7 @@
 
                 <div>
                     <flux:subheading class="text-xs text-gray-500">Department</flux:subheading>
-                    <p class="text-sm font-medium">{{ $selectedStudent->department ?? 'N/A' }}</p>
+                    <p class="text-sm font-medium">{{ $selectedStudent->department_name ?? 'N/A' }}</p>
                 </div>
 
                 <div>

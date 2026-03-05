@@ -4,6 +4,7 @@ namespace App\Livewire\Department;
 
 use App\Models\Department;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class DepartmentEdit extends Component
@@ -16,11 +17,23 @@ class DepartmentEdit extends Component
     {
         $this->departmentId = $id;
         $department = Department::findOrFail($id);
+        $this->authorizeAccess($department);
 
         $this->name = $department->name;
         $this->abbreviation = $department->Abbreviation;
         $this->description = $department->description;
         $this->manager_id = $department->manager_id;
+    }
+
+    protected function authorizeAccess(Department $department)
+    {
+        $user = Auth::user();
+        if (in_array($user->role, ['superadmin', 'admin'])) {
+            return;
+        }
+        if ($department->manager_id !== $user->id) {
+            abort(403, 'You are not the manager of this department.');
+        }
     }
 
     protected function rules()
@@ -53,7 +66,11 @@ class DepartmentEdit extends Component
         $department->save();
 
         session()->flash('message', 'Department updated successfully.');
-        return redirect()->route('department.index');
+        $user = Auth::user();
+        if (in_array($user->role, ['superadmin', 'admin'])) {
+            return redirect()->route('department.index');
+        }
+        return redirect()->route('department.overview', ['departmentId' => $this->departmentId]);
     }
     
     public function render()

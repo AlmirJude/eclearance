@@ -8,8 +8,6 @@ class Office extends Model
 {
     protected $fillable = [
         'name',
-        'description',
-        'abbreviation',
         'manager_id',
         'is_required',
         'clearance_order',
@@ -38,6 +36,8 @@ class Office extends Model
         return $this->manager->email;
     }
 
-
-
+    public function requirements()
+    {
+        return $this->morphMany(ClearanceRequirement::class, 'requirable');
+    }
 }

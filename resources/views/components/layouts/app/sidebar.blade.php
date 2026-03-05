@@ -11,6 +11,29 @@
                 Dashboard
             </flux:navlist.item>
 
+            @if(in_array(auth()->user()->role, ['student']))
+            <flux:navlist.item icon="document-text" href="{{ route('clearance.student') }}">
+                My Clearances
+            </flux:navlist.item>
+            @endif
+
+
+            @php
+                $isSignatoryUser = in_array(auth()->user()->role, ['admin', 'staff'])
+                    || auth()->user()->clubSignatories->isNotEmpty()
+                    || auth()->user()->departmentSignatories->isNotEmpty()
+                    || auth()->user()->officeSignatories->isNotEmpty()
+                    || auth()->user()->studentGovernmentOfficerships()->where('can_sign', true)->where('is_active', true)->exists();
+            @endphp
+            @if($isSignatoryUser)
+            <flux:navlist.item icon="document-check" href="{{ route('clearance.signatory') }}">
+                Signatory Clearance Forms
+            </flux:navlist.item>
+            @endif
+
+            <livewire:notification-bell />
+            <flux:separator />
+
             {{-- Superadmin & Admin Only --}}
             @if(in_array(auth()->user()->role, ['superadmin', 'admin']))
                 <flux:separator />
@@ -25,7 +48,10 @@
                     <flux:navlist.item href="{{ route('department.index') }}">Departments</flux:navlist.item>
                     <flux:navlist.item href="{{ route('club.index') }}">Clubs</flux:navlist.item>
                     <flux:navlist.item href="{{ route('office.index') }}">Offices</flux:navlist.item>
-                </flux:navlist.group>5
+                    <flux:navlist.item href="{{ route('homeroom.assignments') }}">Homeroom Advisers</flux:navlist.item>
+                    <flux:navlist.item href="{{ route('student-government.index') }}">Student Government</flux:navlist.item>
+                    <flux:navlist.item href="{{ route('clearance.periods') }}">Clearance Periods</flux:navlist.item>
+                </flux:navlist.group>
             @endif
 
             {{-- Department Manager/Signatory Section --}}
@@ -52,15 +78,17 @@
                             Students
                         </flux:navlist.item>
                         
-                        {{-- <flux:navlist.item href="{{ route('department.clearances', $department->id) }}">
+                        <flux:navlist.item href="{{ route('clearance.signatory', ['entityType' => 'department', 'entityId' => $department->id]) }}">
                             Clearances
-                        </flux:navlist.item> --}}
+                        </flux:navlist.item>
                         
                         @if($department->manager_id === auth()->id())
-                            {{-- <flux:navlist.item href="{{ route('department.signatories', $department->id) }}">
+                            <flux:navlist.item href="{{ route('department.signatories', $department->id) }}">
                                 Signatories
-                            </flux:navlist.item> --}}
-                            
+                            </flux:navlist.item>
+                        @endif
+                        
+                        @if($department->manager_id === auth()->id())
                             <flux:navlist.item href="{{ route('department.edit', $department->id) }}">
                                 Settings
                             </flux:navlist.item>
@@ -69,7 +97,7 @@
                 @endforeach
             @endif
 
-            Club Moderator/Signatory Section
+            {{-- Club Moderator/Signatory Section --}}
             @php
                 $managedClubs = auth()->user()->managedClubs;
                 $clubSignatories = auth()->user()->clubSignatories;
@@ -85,7 +113,7 @@
                         heading="{{ $club->Abbreviation ?? $club->name }}" 
                         icon="user-group"
                     >
-                        {{-- <flux:navlist.item href="{{ route('club.overview', $club->id) }}">
+                        <flux:navlist.item href="{{ route('club.overview', $club->id) }}">
                             Overview
                         </flux:navlist.item>
                         
@@ -93,7 +121,13 @@
                             Members
                         </flux:navlist.item>
                         
-                        <flux:navlist.item href="{{ route('club.clearances', $club->id) }}">
+                        @if(auth()->user()->role === 'admin')
+                            <flux:navlist.item href="{{ route('club.signatories', $club->id) }}">
+                                Signatories
+                            </flux:navlist.item>
+                        @endif
+                        
+                        <flux:navlist.item href="{{ route('clearance.signatory', ['entityType' => 'club', 'entityId' => $club->id]) }}">
                             Clearances
                         </flux:navlist.item>
                         
@@ -101,12 +135,12 @@
                             <flux:navlist.item href="{{ route('club.edit', $club->id) }}">
                                 Settings
                             </flux:navlist.item>
-                        @endif --}}
+                        @endif
                     </flux:navlist.group>
                 @endforeach
             @endif
 
-            Office Manager Section
+            {{-- Office Manager Section --}}
             @php
                 $managedOffices = auth()->user()->managedOffices;
                 $officeSignatories = auth()->user()->officeSignatories;
@@ -122,13 +156,19 @@
                         heading="{{ $office->name }}" 
                         icon="building-office"
                     >
-                        {{-- <flux:navlist.item href="{{ route('office.overview', $office->id) }}">
+                        <flux:navlist.item href="{{ route('office.overview', $office->id) }}">
                             Overview
                         </flux:navlist.item>
                         
-                        <flux:navlist.item href="{{ route('office.clearances', $office->id) }}">
+                        <flux:navlist.item href="{{ route('clearance.signatory', ['entityType' => 'office', 'entityId' => $office->id]) }}">
                             Clearances
-                        </flux:navlist.item> --}}
+                        </flux:navlist.item>
+                        
+                        @if(auth()->user()->role === 'admin')
+                            <flux:navlist.item href="{{ route('office.signatories', $office->id) }}">
+                                Signatories
+                            </flux:navlist.item>
+                        @endif
                         
                         @if($office->manager_id === auth()->id())
                             <flux:navlist.item href="{{ route('office.edit', $office->id) }}">
@@ -138,6 +178,9 @@
                     </flux:navlist.group>
                 @endforeach
             @endif
+
+
+            <flux:separator />
 
 
             <flux:spacer />

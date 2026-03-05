@@ -10,20 +10,21 @@ use Livewire\Component;
 class EditStaff extends Component
 {
     public $employee_id, $email, $password, $confirmPassword, $role;
-    public $first_name, $last_name, $department, $position;
+    public $first_name, $last_name, $department, $position, $employee_type;
 
     public function mount ($id)
     {
         $user = User::findorFail($id);
         $staff = StaffDetail::where('user_id', $user->id)->firstorFail();
 
-        $this->employee_id = $staff->employee_id;
-        $this->email = $user->email;
-        $this->first_name = $staff->first_name;
-        $this->last_name = $staff->last_name;
-        $this->department = $staff->department;
-        $this->position = $staff->position;
-        $this->role = $user->role;
+        $this->employee_id   = $staff->employee_id;
+        $this->email         = $user->email;
+        $this->first_name    = $staff->first_name;
+        $this->last_name     = $staff->last_name;
+        $this->department    = $staff->department;
+        $this->position      = $staff->position;
+        $this->employee_type = $staff->employee_type;
+        $this->role          = $user->role;
     }
 
     protected function rules()
@@ -37,8 +38,9 @@ class EditStaff extends Component
             // Staff details validation
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'department' => 'nullable|string|max:255',
-            'position' => 'nullable|string|max:255',
+            'department'    => 'nullable|string|max:255',
+            'position'      => 'nullable|string|max:255',
+            'employee_type' => 'nullable|in:teaching,non-teaching',
         ];
     }
 
@@ -56,10 +58,11 @@ class EditStaff extends Component
         }
         $user->save();
 
-        $staff->first_name = $this->first_name;
-        $staff->last_name = $this->last_name;
-        $staff->department = $this->department;
-        $staff->position = $this->position;
+        $staff->first_name    = $this->first_name;
+        $staff->last_name     = $this->last_name;
+        $staff->department    = $this->department;
+        $staff->position      = $this->position;
+        $staff->employee_type = $this->employee_type;
         $staff->save();
 
         return redirect()->route('staff.index')->with('success', 'Staff updated successfully.');

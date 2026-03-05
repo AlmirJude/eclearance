@@ -17,12 +17,15 @@
             <flux:input wire:model='name' label="Department Name" placeholder="Department Name" />            
             <flux:input wire:model='abbreviation' label="Abbreviation" placeholder="Abbreviation" />            
             <flux:input wire:model='description' label="Description" placeholder="Description" />
+
+            @if(auth()->user()->role === 'admin')
             <flux:select wire:model='manager_id' label="Dean / Program Head" placeholder="Select Dean / Program Head">
                 <option value="">Select Dean / Program Head</option>
                 @foreach ($availableAdmins as $admin)
                     <option value="{{ $admin->id }}">{{ $admin->fullname}}, {{$admin->department}}</option>
                 @endforeach
             </flux:select>    
+            @endif
         </div>
 
         <flux:separator class="mt-10"/>

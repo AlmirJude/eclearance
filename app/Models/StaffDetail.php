@@ -12,7 +12,8 @@ class StaffDetail extends Model
         'first_name',
         'last_name',
         'department',
-        'position'
+        'position',
+        'employee_type',
     ];
 
     //Relationships

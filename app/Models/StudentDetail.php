@@ -24,11 +24,11 @@ class StudentDetail extends Model
         return $this->belongsTo(Department::class);
     }
 
-    public function getFullNameAttribute(){
-        return "{$this->first_name} {$this->last_name}";
+    public function getDepartmentNameAttribute() {
+        return $this->department?->name ?? 'N/A';
     }
 
-    public function getDepartmentAttribute() {
-        return $this->department()->first()->name;
+    public function getFullNameAttribute(){
+        return "{$this->first_name} {$this->last_name}";
     }
 }

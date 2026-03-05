@@ -4,6 +4,7 @@ namespace App\Livewire\Office;
 
 use App\Models\Office;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class EditOffice extends Component
@@ -17,10 +18,22 @@ class EditOffice extends Component
     public function mount()
     {
         $office = Office::findorfail($this->id);
+        $this->authorizeAccess($office);
         $this->name = $office->name;
         $this->manager_id = $office->manager_id;
         $this->is_required = $office->is_required;
         $this->clearance_order = $office->clearance_order;
+    }
+
+    protected function authorizeAccess(Office $office)
+    {
+        $user = Auth::user();
+        if (in_array($user->role, ['superadmin', 'admin'])) {
+            return;
+        }
+        if ($office->manager_id !== $user->id) {
+            abort(403, 'You are not the manager of this office.');
+        }
     }
     
 
@@ -42,6 +55,24 @@ class EditOffice extends Component
         'clearance_order.min' => 'Clearance order must be at least 0',
     ];
 
+    public function save()
+    {
+        $this->validate();
+
+        $office = Office::findOrFail($this->id);
+        $office->name = $this->name;
+        $office->manager_id = $this->manager_id;
+        $office->is_required = $this->is_required;
+        $office->clearance_order = $this->clearance_order;
+        $office->save();
+
+        session()->flash('message', 'Office updated successfully.');
+        $user = Auth::user();
+        if (in_array($user->role, ['superadmin', 'admin'])) {
+            return redirect()->route('office.index');
+        }
+        return redirect()->route('office.overview', ['officeId' => $this->id]);
+    }
 
     public function render()
     {

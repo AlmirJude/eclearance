@@ -4,6 +4,7 @@ namespace App\Livewire\Club;
 
 use App\Models\Club;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class EditClub extends Component
@@ -15,12 +16,24 @@ class EditClub extends Component
     {
         $this->clubId = $id;
         $club = Club::findOrFail($id);
+        $this->authorizeAccess($club);
 
         $this->name = $club->name;
         $this->type = $club->type;
         $this->description = $club->description;
         $this->abbreviation = $club->Abbreviation;
         $this->moderator_id = $club->moderator_id;
+    }
+
+    protected function authorizeAccess(Club $club)
+    {
+        $user = Auth::user();
+        if (in_array($user->role, ['superadmin', 'admin'])) {
+            return;
+        }
+        if ($club->moderator_id !== $user->id) {
+            abort(403, 'You are not the moderator of this club.');
+        }
     }
 
     public function rules()
@@ -56,7 +69,11 @@ class EditClub extends Component
         $club->save();
 
         session()->flash('message', 'Club updated successfully.');
-        return redirect()->route('club.index');
+        $user = Auth::user();
+        if (in_array($user->role, ['superadmin', 'admin'])) {
+            return redirect()->route('club.index');
+        }
+        return redirect()->route('club.overview', ['clubId' => $this->clubId]);
     }
 
     public function render()

@@ -39,4 +39,9 @@ class Club extends Model
             return $this->moderator->staffDetail->fullname;
         }
     }
+
+    public function requirements()
+    {
+        return $this->morphMany(ClearanceRequirement::class, 'requirable');
+    }
 }
