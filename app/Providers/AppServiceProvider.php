@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\URL; // 1. Add this import
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // 2. Force HTTPS if the environment is production
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         Relation::morphMap([
             'homeroom_adviser'                => \App\Models\HomeroomAssignment::class,
             'App\\Models\\Club'               => \App\Models\Club::class,
