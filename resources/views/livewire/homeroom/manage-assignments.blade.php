@@ -168,11 +168,11 @@
                 @error('year_levels') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Section --}}
+            {{-- Section
             <div>
                 <flux:input wire:model="section" label="Section (Optional)" placeholder="e.g. A, B (leave blank for all sections)" />
                 @error('section') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
-            </div>
+            </div> --}}
 
             {{-- Academic Year --}}
             <div>

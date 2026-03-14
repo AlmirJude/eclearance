@@ -43,6 +43,12 @@ class SignatoryDashboard extends Component
     public $yearLevelFilter = '';
     public $availableDepartments = [];
 
+    // Signatory restrictions (for office signatories assigned to specific dept/year)
+    public $signatoryDeptRestrictions = [];
+    public $signatoryYearRestrictions = [];
+    public $hasSignatoryRestrictions = false;
+    public $availableYearLevels = [1, 2, 3, 4];
+
     // Search & requirements filters
     public $searchQuery = '';
     public $requirementsFilter = 'all'; // 'all', 'with_submissions', 'without_submissions'
@@ -178,6 +184,56 @@ class SignatoryDashboard extends Component
         }
     }
     
+    protected function loadSignatoryRestrictions()
+    {
+        $this->signatoryDeptRestrictions = [];
+        $this->signatoryYearRestrictions = [];
+        $this->hasSignatoryRestrictions  = false;
+        $this->availableYearLevels       = [1, 2, 3, 4];
+
+        // Only restrict for office signatories
+        if ($this->selectedEntityType !== 'App\\Models\\Office') {
+            return;
+        }
+
+        $user = Auth::user();
+
+        // Admins and superadmins see everything
+        if (in_array($user->role, ['superadmin', 'admin'])) {
+            return;
+        }
+
+        // Office managers see everything
+        $office = \App\Models\Office::find($this->selectedEntity['id']);
+        if ($office && $office->manager_id === $user->id) {
+            return;
+        }
+
+        // Fetch this user's signatory record for the office
+        $signatory = DB::table('office_signatories')
+            ->where('office_id', $this->selectedEntity['id'])
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$signatory) {
+            return;
+        }
+
+        $departments = json_decode($signatory->departments, true) ?? [];
+        $yearLevels  = json_decode($signatory->year_levels, true)  ?? [];
+
+        if (!empty($departments) || !empty($yearLevels)) {
+            $this->signatoryDeptRestrictions = array_map('intval', $departments);
+            $this->signatoryYearRestrictions = array_map('intval', $yearLevels);
+            $this->hasSignatoryRestrictions  = true;
+
+            if (!empty($this->signatoryYearRestrictions)) {
+                $this->availableYearLevels = $this->signatoryYearRestrictions;
+            }
+        }
+    }
+
     public function selectEntity($index)
     {
         if (!isset($this->signatoryEntities[$index])) {
@@ -192,6 +248,7 @@ class SignatoryDashboard extends Component
         $this->yearLevelFilter    = '';
         $this->searchQuery        = '';
         $this->requirementsFilter = 'all';
+        $this->loadSignatoryRestrictions();
         $this->loadAvailableDepartments();
         $this->updateStats();
         $this->loadFilteredItems();
@@ -247,18 +304,28 @@ class SignatoryDashboard extends Component
         }
         
         // Get all student IDs that have a clearance item for this entity in the active period
-        $studentIds = ClearanceItem::whereHas('request', function($q) {
+        $departmentIds = ClearanceItem::whereHas('request', function($q) {
                 $q->where('period_id', $this->activePeriod->id);
             })
             ->where('signable_type', $this->selectedEntityType)
             ->where('signable_id', $this->selectedEntity['id'])
+            ->whereHas('request.student.studentDetail', function($q) {
+                if ($this->hasSignatoryRestrictions) {
+                    if (!empty($this->signatoryDeptRestrictions)) {
+                        $q->whereIn('department_id', $this->signatoryDeptRestrictions);
+                    }
+                    if (!empty($this->signatoryYearRestrictions)) {
+                        $q->whereIn('year_level', $this->signatoryYearRestrictions);
+                    }
+                }
+            })
             ->with('request.student.studentDetail.department')
             ->get()
             ->pluck('request.student.studentDetail.department_id')
             ->unique()
             ->filter();
         
-        $this->availableDepartments = \App\Models\Department::whereIn('id', $studentIds)
+        $this->availableDepartments = \App\Models\Department::whereIn('id', $departmentIds)
             ->orderBy('name')
             ->get()
             ->toArray();
@@ -278,6 +345,15 @@ class SignatoryDashboard extends Component
                 $q->where('period_id', $this->activePeriod->id);
             })
             ->whereHas('request.student.studentDetail', function($q) {
+                // Apply signatory scope restrictions first
+                if ($this->hasSignatoryRestrictions) {
+                    if (!empty($this->signatoryDeptRestrictions)) {
+                        $q->whereIn('department_id', $this->signatoryDeptRestrictions);
+                    }
+                    if (!empty($this->signatoryYearRestrictions)) {
+                        $q->whereIn('year_level', $this->signatoryYearRestrictions);
+                    }
+                }
                 if ($this->departmentFilter) {
                     $q->where('department_id', $this->departmentFilter);
                 }
@@ -332,7 +408,7 @@ class SignatoryDashboard extends Component
                 'has_submissions'   => $item->submissions_count > 0,
                 'submissions_count' => $item->submissions_count,
             ];
-        })->toArray();
+        })->sortByDesc('can_sign')->values()->toArray();
     }
     
     public function updateStats()
@@ -346,8 +422,20 @@ class SignatoryDashboard extends Component
             })
             ->where('signable_type', $this->selectedEntityType)
             ->where('signable_id', $this->selectedEntity['id']);
+
+        // Apply signatory scope restrictions
+        if ($this->hasSignatoryRestrictions) {
+            $query->whereHas('request.student.studentDetail', function($q) {
+                if (!empty($this->signatoryDeptRestrictions)) {
+                    $q->whereIn('department_id', $this->signatoryDeptRestrictions);
+                }
+                if (!empty($this->signatoryYearRestrictions)) {
+                    $q->whereIn('year_level', $this->signatoryYearRestrictions);
+                }
+            });
+        }
         
-        $this->pendingCount = (clone $query)->where('status', 'pending')->count();
+        $this->pendingCount  = (clone $query)->where('status', 'pending')->count();
         $this->approvedCount = (clone $query)->where('status', 'approved')->count();
         $this->rejectedCount = (clone $query)->where('status', 'rejected')->count();
     }
@@ -475,6 +563,15 @@ class SignatoryDashboard extends Component
                 $q->where('period_id', $this->activePeriod->id);
             })
             ->whereHas('request.student.studentDetail', function($q) {
+                // Apply signatory scope restrictions first
+                if ($this->hasSignatoryRestrictions) {
+                    if (!empty($this->signatoryDeptRestrictions)) {
+                        $q->whereIn('department_id', $this->signatoryDeptRestrictions);
+                    }
+                    if (!empty($this->signatoryYearRestrictions)) {
+                        $q->whereIn('year_level', $this->signatoryYearRestrictions);
+                    }
+                }
                 if (!empty($this->bulkDepartments)) {
                     $q->whereIn('department_id', $this->bulkDepartments);
                 }
@@ -512,6 +609,15 @@ class SignatoryDashboard extends Component
                 $q->where('period_id', $this->activePeriod->id);
             })
             ->whereHas('request.student.studentDetail', function($q) {
+                // Apply signatory scope restrictions first
+                if ($this->hasSignatoryRestrictions) {
+                    if (!empty($this->signatoryDeptRestrictions)) {
+                        $q->whereIn('department_id', $this->signatoryDeptRestrictions);
+                    }
+                    if (!empty($this->signatoryYearRestrictions)) {
+                        $q->whereIn('year_level', $this->signatoryYearRestrictions);
+                    }
+                }
                 if (!empty($this->bulkDepartments)) {
                     $q->whereIn('department_id', $this->bulkDepartments);
                 }

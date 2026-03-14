@@ -138,10 +138,16 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($yearLevelStats as $stat)
-                                <tr>
+                                <tr class="cursor-pointer hover:bg-indigo-50 transition-colors"
+                                    wire:click="selectYearLevel({{ $stat['year_level'] }})">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium
+                                            {{ $selectedYearLevel === $stat['year_level'] ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-800' }}">
                                             Year {{ $stat['year_level'] }}
+                                            <svg class="w-3.5 h-3.5 transition-transform {{ $selectedYearLevel === $stat['year_level'] ? 'rotate-180' : '' }}"
+                                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
@@ -171,6 +177,69 @@
                                         </div>
                                     </td>
                                 </tr>
+                                @if($selectedYearLevel === $stat['year_level'])
+                                    <tr>
+                                        <td colspan="7" class="px-0 pb-0 pt-0 bg-indigo-50">
+                                            <div class="px-6 py-4">
+                                                <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700 mb-3">
+                                                    Year {{ $stat['year_level'] }} — All Students
+                                                </p>
+                                                @if(count($yearLevelDetails) === 0)
+                                                    <p class="text-sm text-gray-500 italic">No students found in this year level.</p>
+                                                @else
+                                                    <table class="min-w-full text-sm">
+                                                        <thead>
+                                                            <tr class="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                                                <th class="pr-6 py-2 text-left">Student</th>
+                                                                <th class="pr-6 py-2 text-left">ID</th>
+                                                                <th class="pr-6 py-2 text-left">Status</th>
+                                                                <th class="pr-6 py-2 text-left">Dept. Signed At</th>
+                                                                <th class="pr-6 py-2 text-left">Signed By</th>
+                                                                <th class="py-2 text-left">Clearance Completed At</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-indigo-100">
+                                                            @foreach($yearLevelDetails as $detail)
+                                                                <tr class="hover:bg-indigo-100/50">
+                                                                    <td class="pr-6 py-2 font-medium text-gray-900">{{ $detail['name'] }}</td>
+                                                                    <td class="pr-6 py-2 text-gray-600">{{ $detail['student_id'] }}</td>
+                                                                    <td class="pr-6 py-2">
+                                                                        @if($detail['clearance_completed'])
+                                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                                ✓ Completed
+                                                                            </span>
+                                                                        @elseif($detail['dept_signed'])
+                                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                                ✓ Dept. Signed
+                                                                            </span>
+                                                                        @elseif($detail['request_status'] === 'in_progress' || $detail['request_status'] === 'pending')
+                                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                                In Progress
+                                                                            </span>
+                                                                        @else
+                                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                                                                No Request
+                                                                            </span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="pr-6 py-2">
+                                                                        @if($detail['dept_signed'])
+                                                                            <span class="text-green-700">{{ $detail['dept_signed_at'] ?? '—' }}</span>
+                                                                        @else
+                                                                            <span class="text-gray-400">—</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="pr-6 py-2 text-gray-600">{{ $detail['signed_by'] ?? '—' }}</td>
+                                                                    <td class="py-2 text-gray-600">{{ $detail['clearance_completed_at'] ?? '—' }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>

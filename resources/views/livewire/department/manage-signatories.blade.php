@@ -171,16 +171,6 @@
                         @error('title') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
-                    {{-- Clearance Type --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Clearance Type (Optional)</label>
-                        <input 
-                            type="text" 
-                            wire:model="clearance_type" 
-                            placeholder="e.g., Final, Mid-term, Graduation"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        @error('clearance_type') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
-                    </div>
 
                     {{-- Year Levels --}}
                     <div>
