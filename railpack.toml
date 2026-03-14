@@ -3,7 +3,7 @@ nixPkgs = ["php83", "php83Extensions.gd", "php83Extensions.zip", "php83Extension
 
 [phases.install]
 cmds = [
-    "composer install --optimize-autoloader --no-dev --no-scripts --no-interaction",
+    "composer install --optimize-autoloader --no-dev --no-scripts --no-interaction --ignore-platform-req=ext-zip",
     "npm ci",
 ]
 
