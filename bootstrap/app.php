@@ -12,8 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
-        $middleware -> alias([
+        
+        // This is the fix for the 401 Livewire upload error on Railway
+        $middleware->trustProxies(at: '*'); 
+
+        $middleware->alias([
             'role' => RoleMiddleWare::class,
         ]);
     })
