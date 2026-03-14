@@ -29,7 +29,7 @@ class NotificationBell extends Component
         $studentNotifs   = $user->isStudent() ? $this->getStudentNotifications($user) : ['items' => [], 'unread' => 0];
         $signatoryNotifs = $this->getSignatoryNotifications($user);
 
-        $this->notifications = array_merge($studentNotifs['items'], $signatoryNotifs['items']);
+        $this->notifications = array_merge($signatoryNotifs['items'], $studentNotifs['items']);
         $this->unreadCount   = min(99, $studentNotifs['unread'] + $signatoryNotifs['unread']);
     }
 
@@ -96,10 +96,24 @@ class NotificationBell extends Component
                 ->where('dependent_id', $entity['id'])
                 ->exists();
 
+            $deptRestrictions = $entity['dept_restrictions'] ?? [];
+            $yearRestrictions = $entity['year_restrictions'] ?? [];
+            $hasRestrictions  = !empty($deptRestrictions) || !empty($yearRestrictions);
+
             if (!$hasDependencies) {
                 $readyCount = ClearanceItem::where('status', 'pending')
                     ->where('signable_type', $entity['type'])
                     ->where('signable_id', $entity['id'])
+                    ->when($hasRestrictions, function ($q) use ($deptRestrictions, $yearRestrictions) {
+                        $q->whereHas('request.student.studentDetail', function ($sq) use ($deptRestrictions, $yearRestrictions) {
+                            if (!empty($deptRestrictions)) {
+                                $sq->whereIn('department_id', $deptRestrictions);
+                            }
+                            if (!empty($yearRestrictions)) {
+                                $sq->whereIn('year_level', $yearRestrictions);
+                            }
+                        });
+                    })
                     ->count();
             } else {
                 // Filter each pending item through the dependency resolver
@@ -107,6 +121,16 @@ class NotificationBell extends Component
                     ->where('status', 'pending')
                     ->where('signable_type', $entity['type'])
                     ->where('signable_id', $entity['id'])
+                    ->when($hasRestrictions, function ($q) use ($deptRestrictions, $yearRestrictions) {
+                        $q->whereHas('request.student.studentDetail', function ($sq) use ($deptRestrictions, $yearRestrictions) {
+                            if (!empty($deptRestrictions)) {
+                                $sq->whereIn('department_id', $deptRestrictions);
+                            }
+                            if (!empty($yearRestrictions)) {
+                                $sq->whereIn('year_level', $yearRestrictions);
+                            }
+                        });
+                    })
                     ->get()
                     ->filter(fn($item) => $resolver->canSign($item->signable_type, $item->signable_id, $item->request)['can_sign'])
                     ->count();
@@ -164,10 +188,18 @@ class NotificationBell extends Component
             ->join('offices', 'office_signatories.office_id', '=', 'offices.id')
             ->where('office_signatories.user_id', $user->id)
             ->where('office_signatories.is_active', true)
-            ->select('offices.id', 'offices.name', DB::raw("'App\\\\Models\\\\Office' as type"))
+            ->select('offices.id', 'offices.name', DB::raw("'App\\\\Models\\\\Office' as type"),
+                     'office_signatories.departments', 'office_signatories.year_levels')
             ->get();
         foreach ($officeRows as $row) {
-            $entities[] = ['id' => $row->id, 'name' => $row->name, 'type' => $row->type, 'label' => 'Office'];
+            $entities[] = [
+                'id'               => $row->id,
+                'name'             => $row->name,
+                'type'             => $row->type,
+                'label'            => 'Office',
+                'dept_restrictions' => json_decode($row->departments ?? '[]', true) ?? [],
+                'year_restrictions' => json_decode($row->year_levels  ?? '[]', true) ?? [],
+            ];
         }
 
         $deptRows = DB::table('department_signatories')

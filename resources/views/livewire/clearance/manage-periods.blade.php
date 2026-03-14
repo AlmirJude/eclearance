@@ -121,6 +121,9 @@
                             @error('name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                         </div>
 
+                            <label for="isActive" class="block text-sm text-gray-900">
+                                Upcoming Semester Details
+                            </label>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Academic Year *</label>

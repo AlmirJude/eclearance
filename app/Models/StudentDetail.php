@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class StudentDetail extends Model
 {
+    protected static function booted(): void
+    {
+        static::deleted(function (StudentDetail $detail) {
+            $detail->user?->delete();
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'student_id',

@@ -27,6 +27,10 @@ class DepartmentOverview extends Component
     // Year level breakdown
     public $yearLevelStats = [];
 
+    // Year level drill-down
+    public $selectedYearLevel = null;
+    public $yearLevelDetails = [];
+
     public function mount($departmentId)
     {
         $this->departmentId = $departmentId;
@@ -112,6 +116,85 @@ class DepartmentOverview extends Component
         
         // Sort by year level
         usort($this->yearLevelStats, fn($a, $b) => $a['year_level'] <=> $b['year_level']);
+    }
+
+    public function selectYearLevel($yearLevel)
+    {
+        if ($this->selectedYearLevel === $yearLevel) {
+            $this->selectedYearLevel = null;
+            $this->yearLevelDetails = [];
+            return;
+        }
+
+        $this->selectedYearLevel = $yearLevel;
+        $this->loadYearLevelDetails($yearLevel);
+    }
+
+    protected function loadYearLevelDetails($yearLevel): void
+    {
+        if (!$this->activePeriod) {
+            $this->yearLevelDetails = [];
+            return;
+        }
+
+        $students = StudentDetail::where('department_id', $this->departmentId)
+            ->where('year_level', $yearLevel)
+            ->get();
+
+        $studentUserIds = $students->pluck('user_id')->toArray();
+
+        $requests = ClearanceRequest::whereIn('student_id', $studentUserIds)
+            ->where('period_id', $this->activePeriod->id)
+            ->get()
+            ->keyBy('student_id');
+
+        $requestIds = $requests->pluck('id')->toArray();
+
+        $deptItems = \App\Models\ClearanceItem::whereIn('request_id', $requestIds)
+            ->where('signable_type', 'App\\Models\\Department')
+            ->where('signable_id', $this->departmentId)
+            ->where('status', 'approved')
+            ->with('signer.staffDetail')
+            ->get()
+            ->keyBy('request_id');
+
+        $details = $students->map(function ($student) use ($requests, $deptItems) {
+            $request  = $requests->get($student->user_id);
+            $deptItem = $request ? $deptItems->get($request->id) : null;
+
+            $clearanceCompleted = $request && $request->status === 'completed';
+            $deptSigned         = $deptItem !== null;
+
+            $signerName = null;
+            if ($deptItem && $deptItem->signer) {
+                $sd = $deptItem->signer->staffDetail;
+                $signerName = $sd ? $sd->first_name . ' ' . $sd->last_name : $deptItem->signer->email;
+            }
+
+            // Sort weight: 0 = completed, 1 = dept signed only, 2 = in progress, 3 = no request
+            $sortWeight = match(true) {
+                $clearanceCompleted => 0,
+                $deptSigned         => 1,
+                $request !== null   => 2,
+                default             => 3,
+            };
+
+            return [
+                'name'                   => $student->first_name . ' ' . $student->last_name,
+                'student_id'             => $student->student_id,
+                'clearance_completed'    => $clearanceCompleted,
+                'clearance_completed_at' => $clearanceCompleted && $request->completed_at
+                    ? $request->completed_at->format('M d, Y H:i')
+                    : null,
+                'dept_signed'            => $deptSigned,
+                'dept_signed_at'         => $deptItem?->signed_at?->format('M d, Y H:i'),
+                'signed_by'              => $signerName,
+                'request_status'         => $request?->status ?? 'none',
+                'sort_weight'            => $sortWeight,
+            ];
+        })->sortBy('sort_weight')->values()->toArray();
+
+        $this->yearLevelDetails = $details;
     }
 
     public function render()

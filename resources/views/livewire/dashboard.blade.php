@@ -254,7 +254,7 @@
         @endif
 
         {{-- Clubs --}}
-        @if($studentClubs->count())
+        @if(count($studentClubs))
             <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">My Clubs</p>
                 <div class="flex flex-wrap gap-2">

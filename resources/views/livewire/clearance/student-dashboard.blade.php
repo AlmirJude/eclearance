@@ -3,16 +3,29 @@
 {{-- Print Styles --}}
 <style>
     @media print {
+        @page {
+            size: 8in 2in;
+            margin: 0;
+        }
+        html, body {
+            width: 8in;
+            height: 2in;
+            overflow: hidden;
+        }
         body * { visibility: hidden !important; }
         #clearance-slip, #clearance-slip * { visibility: visible !important; }
         #clearance-slip {
             position: fixed !important;
             top: 0; left: 0;
-            width: 3in;
-            padding: 0.25in;
+            width: 8in;
+            height: 2in;
+            padding: 0.2in 0.3in;
             font-family: Arial, sans-serif;
             font-size: 11pt;
             line-height: 1.5;
+            box-sizing: border-box;
+            overflow: hidden;
+            page-break-after: avoid;
             visibility: visible !important;
         }
     }
@@ -20,11 +33,11 @@
 
 {{-- Hidden Print Slip --}}
 <div id="clearance-slip" style="display:none;">
-    <p style="margin:0 0 6px 0; font-size:11pt;">
-        <strong>{{ $studentName }}</strong> is now eligible for enrollment
+    <p style="margin:0 0 8px 0; font-size:11pt; line-height:1.6;">
+        This is to certify that <strong>{{ $studentName }}</strong> has completed
+        <strong>{{ $activePeriod->name ?? '' }}</strong> clearance and is eligible now to enroll in
+        <strong>{{ $activePeriod->semester ?? '' }} Semester {{ $activePeriod->academic_year ?? '' }}</strong>.
     </p>
-    <p style="margin:0; border-bottom:1px solid #000; width:100%; padding-bottom:2px;">&nbsp;</p>
-    <p style="margin:8px 0 0 0; font-size:9pt; color:#555;">{{ $activePeriod->name ?? '' }} &mdash; {{ $activePeriod->academic_year ?? '' }}</p>
 </div>
 
 {{-- Confetti + Completion Modal --}}

@@ -178,10 +178,9 @@
                         <select wire:model.live="yearLevelFilter"
                                 class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                             <option value="">All Year Levels</option>
-                            <option value="1">Year 1</option>
-                            <option value="2">Year 2</option>
-                            <option value="3">Year 3</option>
-                            <option value="4">Year 4</option>
+                            @foreach($availableYearLevels as $yr)
+                                <option value="{{ $yr }}">Year {{ $yr }}</option>
+                            @endforeach
                         </select>
                         {{-- Clear Filters --}}
                         @if($departmentFilter || $yearLevelFilter || $searchQuery || $requirementsFilter !== 'all')
@@ -463,7 +462,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Year Levels</label>
                         <div class="flex flex-wrap gap-3">
-                            @foreach([1,2,3,4] as $yr)
+                            @foreach($availableYearLevels as $yr)
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" 
                                            wire:model.live="bulkYearLevels" 
