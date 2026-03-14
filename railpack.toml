@@ -3,19 +3,18 @@ nixPkgs = ["php83", "php83Extensions.gd", "php83Extensions.zip", "php83Extension
 
 [phases.install]
 cmds = [
-    "composer install --optimize-autoloader --no-dev --no-scripts --no-interaction --ignore-platform-req=ext-zip",
-    "npm ci",
+ "composer install --optimize-autoloader --no-dev --no-scripts --no-interaction",
+ "npm ci",
 ]
 
 [phases.build]
 cmds = [
-    "npm run build",
-    "php artisan config:cache",
-    "php artisan route:cache",
-    "php artisan view:cache"
+ "npm run build",
+ "php artisan config:cache",
+ "php artisan route:cache",
+ "php artisan view:cache"
 ]
 dependsOn = ["install"]
 
 [start]
-# We combine the migration, seeding, and the server start here
-cmd = "php artisan migrate --force && php artisan db:seed --class=adminSeeder --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
