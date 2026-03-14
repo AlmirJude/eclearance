@@ -10,7 +10,9 @@ use App\Services\ClearanceResolver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 
 class NotificationBell extends Component
 {
     public array $notifications = [];

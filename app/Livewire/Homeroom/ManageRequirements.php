@@ -6,7 +6,9 @@ use Livewire\Component;
 use App\Models\HomeroomAssignment;
 use App\Models\ClearanceRequirement;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 
 class ManageRequirements extends Component
 {
     public $assignment;

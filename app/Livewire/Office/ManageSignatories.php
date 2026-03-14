@@ -8,7 +8,9 @@ use App\Models\Department;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 
 class ManageSignatories extends Component
 {
     public $officeId;

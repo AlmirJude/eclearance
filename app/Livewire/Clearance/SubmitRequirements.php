@@ -10,7 +10,9 @@ use App\Models\RequirementSubmission;
 use App\Models\HomeroomAssignment;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 2. Add this attribute to force the wrapper
 class SubmitRequirements extends Component
 {
     use WithFileUploads;

@@ -6,7 +6,9 @@ use App\Models\Department;
 use App\Models\StudentDetail;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 
 class DepartmentStudents extends Component
 {
     public $department;

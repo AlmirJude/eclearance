@@ -6,7 +6,9 @@ use Livewire\Component;
 use App\Models\StudentGovernment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 
 class ManageOfficers extends Component
 {
     public $studentGovernmentId;

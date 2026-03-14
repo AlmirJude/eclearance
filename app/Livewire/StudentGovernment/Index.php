@@ -7,7 +7,9 @@ use Livewire\WithPagination;
 use App\Models\StudentGovernment;
 use App\Models\Department;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 
 class Index extends Component
 {
     use WithPagination;

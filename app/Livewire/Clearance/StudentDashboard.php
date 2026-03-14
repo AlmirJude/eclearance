@@ -10,7 +10,9 @@ use App\Models\ClearanceRequirement;
 use App\Models\RequirementSubmission;
 use App\Services\ClearanceResolver;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 2. Add this attribute to force the wrapper
 class StudentDashboard extends Component
 {
     public $activePeriod = null;

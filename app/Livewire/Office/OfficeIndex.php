@@ -5,7 +5,9 @@ namespace App\Livewire\Office;
 use App\Models\Office;
 use App\Models\User;
 use Livewire\Component;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 
 class OfficeIndex extends Component
 {
     // ── Add modal ──────────────────────────────────────────────────────────────

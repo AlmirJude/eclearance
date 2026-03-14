@@ -7,7 +7,9 @@ use App\Models\Club;
 use App\Models\ClearanceRequirement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 
 class ManageRequirements extends Component
 {
     public $club;

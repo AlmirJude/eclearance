@@ -8,7 +8,9 @@ use App\Models\StudentDetail;
 use Livewire\Component;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout; // 1. Add this import
 
+#[Layout('components.layouts.app')] // 
 class AddStudent extends Component
 {
     // User table fields (user_id will be same as student_id)
