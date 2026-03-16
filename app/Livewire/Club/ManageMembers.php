@@ -3,6 +3,7 @@
 namespace App\Livewire\Club;
 
 use App\Models\Club;
+use App\Models\Department;
 use App\Models\StudentDetail;
 use App\Models\User;
 use Livewire\Component;
@@ -19,8 +20,13 @@ class ManageMembers extends Component
     public $clubId;
     public $club;
     public $members;
+    public $departments;
     public $availableStudents;
     public $selectedStudent = '';
+    public $studentSearch = '';
+    public $memberSearch = '';
+    public $memberDepartmentFilter = '';
+    public $memberYearLevelFilter = '';
     public $showAddModal = false;
 
     // Import
@@ -37,22 +43,119 @@ class ManageMembers extends Component
     public function loadClubData()
     {
         $this->club = Club::with('moderator')->findOrFail($this->clubId);
-        
-        // Get current members
-        $this->members = User::whereHas('clubs', function($query) {
-                $query->where('club_id', $this->clubId);
-            })
-            ->with('studentDetail.department')
-            ->where('role', 'student')
-            ->get();
 
-        // Get students not in this club
-        $this->availableStudents = User::whereDoesntHave('clubs', function($query) {
+        $this->departments = Department::query()
+            ->orderBy('name')
+            ->get(['id', 'name', 'abbreviation']);
+
+        $this->loadMembers();
+
+        $this->loadAvailableStudents();
+    }
+
+    protected function loadMembers()
+    {
+        $query = User::whereHas('clubs', function($clubQuery) {
+                $clubQuery->where('club_id', $this->clubId);
+            })
+            ->with('studentDetail.department')
+            ->where('role', 'student');
+
+        if (!empty($this->memberDepartmentFilter)) {
+            $query->whereHas('studentDetail', function ($studentQuery) {
+                $studentQuery->where('department_id', $this->memberDepartmentFilter);
+            });
+        }
+
+        if (!empty($this->memberYearLevelFilter)) {
+            $query->whereHas('studentDetail', function ($studentQuery) {
+                $studentQuery->where('year_level', $this->memberYearLevelFilter);
+            });
+        }
+
+        if (!empty($this->memberSearch)) {
+            $search = trim($this->memberSearch);
+
+            $query->where(function ($memberQuery) use ($search) {
+                $memberQuery->where('email', 'like', "%{$search}%")
+                    ->orWhereHas('studentDetail', function ($studentQuery) use ($search) {
+                        $studentQuery->where('student_id', 'like', "%{$search}%")
+                            ->orWhere('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                            ->orWhere('year_level', 'like', "%{$search}%")
+                            ->orWhereHas('department', function ($departmentQuery) use ($search) {
+                                $departmentQuery->where('name', 'like', "%{$search}%")
+                                    ->orWhere('abbreviation', 'like', "%{$search}%");
+                            });
+                    });
+            });
+        }
+
+        $this->members = $query->get();
+    }
+
+    public function updatedMemberSearch()
+    {
+        $this->loadMembers();
+    }
+
+    public function updatedMemberDepartmentFilter()
+    {
+        $this->loadMembers();
+    }
+
+    public function updatedMemberYearLevelFilter()
+    {
+        $this->loadMembers();
+    }
+
+    protected function loadAvailableStudents()
+    {
+        $query = User::whereDoesntHave('clubs', function($query) {
                 $query->where('club_id', $this->clubId);
             })
             ->where('role', 'student')
-            ->with('studentDetail.department')
-            ->get();
+            ->with('studentDetail.department');
+
+        if (!empty($this->studentSearch)) {
+            $search = trim($this->studentSearch);
+
+            $query->whereHas('studentDetail', function ($studentQuery) use ($search) {
+                $studentQuery->where('student_id', 'like', "%{$search}%")
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                    ->orWhere('year_level', 'like', "%{$search}%")
+                    ->orWhereHas('department', function ($departmentQuery) use ($search) {
+                        $departmentQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('abbreviation', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $this->availableStudents = $query->get();
+    }
+
+    public function updatedStudentSearch()
+    {
+        $this->loadAvailableStudents();
+    }
+
+    public function openAddModal()
+    {
+        $this->resetValidation('selectedStudent');
+        $this->selectedStudent = '';
+        $this->studentSearch = '';
+        $this->showAddModal = true;
+        $this->loadAvailableStudents();
+    }
+
+    public function closeAddModal()
+    {
+        $this->selectedStudent = '';
+        $this->studentSearch = '';
+        $this->showAddModal = false;
     }
 
     public function addMember()
@@ -80,8 +183,7 @@ class ManageMembers extends Component
             session()->flash('error', 'Student is already a member.');
         }
 
-        $this->selectedStudent = '';
-        $this->showAddModal = false;
+        $this->closeAddModal();
         $this->loadClubData();
     }
 

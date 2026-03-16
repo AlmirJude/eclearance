@@ -35,6 +35,15 @@
         </div>
     @endsession
 
+    <div class="mb-4 mt-4">
+        <input
+            type="text"
+            wire:model.live.debounce.300ms="search"
+            placeholder="Search by employee ID, name, department, type, role, or email..."
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+    </div>
+
     <div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white">
         <table class="min-w-full border-collapse text-sm text-left text-gray-700">
             <thead class="bg-gray-100 text-xs uppercase font-semibold text-gray-600">

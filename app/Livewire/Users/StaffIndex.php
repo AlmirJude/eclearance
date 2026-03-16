@@ -19,6 +19,7 @@ class StaffIndex extends Component
     public $showViewModal = false;
     public $showDeleteModal = false;
     public $selectedStaff;
+    public $search = '';
 
     // CSV Import
     public $showImportModal = false;
@@ -27,7 +28,27 @@ class StaffIndex extends Component
 
     public function render()
     {
-        $staffs = StaffDetail::with('user')->get();
+        $staffs = StaffDetail::query()
+            ->with('user')
+            ->when($this->search, function ($query) {
+                $search = trim($this->search);
+
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('employee_id', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                        ->orWhere('department', 'like', "%{$search}%")
+                        ->orWhere('position', 'like', "%{$search}%")
+                        ->orWhere('employee_type', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('email', 'like', "%{$search}%")
+                                ->orWhere('role', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->get();
+
         return view('livewire.users.staff-index', compact('staffs'));
     }
 

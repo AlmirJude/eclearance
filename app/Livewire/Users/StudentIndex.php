@@ -20,6 +20,9 @@ class StudentIndex extends Component
     public $showViewModal = false;
     public $showDeleteModal = false;
     public $selectedStudent;
+    public $search = '';
+    public $departmentFilter = '';
+    public $yearLevelFilter = '';
 
     // CSV Import
     public $showImportModal = false;
@@ -28,8 +31,38 @@ class StudentIndex extends Component
 
     public function render()
     {
-        $students = StudentDetail::with('department')->get();
-        return view('livewire.users.student-index', compact('students'));
+        $students = StudentDetail::query()
+            ->with(['department', 'user'])
+            ->when($this->departmentFilter, function ($query) {
+                $query->where('department_id', $this->departmentFilter);
+            })
+            ->when($this->yearLevelFilter, function ($query) {
+                $query->where('year_level', $this->yearLevelFilter);
+            })
+            ->when($this->search, function ($query) {
+                $search = trim($this->search);
+
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('student_id', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                        ->orWhere('year_level', 'like', "%{$search}%")
+                        ->orWhereHas('department', function ($departmentQuery) use ($search) {
+                            $departmentQuery->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('email', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->get();
+
+        $departments = Department::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('livewire.users.student-index', compact('students', 'departments'));
     }
 
     // ─── CSV Import ────────────────────────────────────────────────────────────

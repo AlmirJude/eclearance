@@ -26,6 +26,40 @@
             </div>
         @endsession
 
+    <div class="mb-4 mt-4">
+        <input
+            type="text"
+            wire:model.live.debounce.300ms="search"
+            placeholder="Search by student ID, name, department, year level, or email..."
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+    </div>
+
+    <div class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+        <select
+            wire:model.live="departmentFilter"
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+            <option value="">All Departments</option>
+            @foreach($departments as $department)
+                <option value="{{ $department->id }}">{{ $department->name }}</option>
+            @endforeach
+        </select>
+
+        <select
+            wire:model.live="yearLevelFilter"
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+            <option value="">All Year Levels</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+            <option value="5">5th Year</option>
+            <option value="6">6th Year</option>
+        </select>
+    </div>
+
     <div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white">
         <table class="min-w-full border-collapse text-sm text-left text-gray-700">
             <thead class="bg-gray-100 text-xs uppercase font-semibold text-gray-600">

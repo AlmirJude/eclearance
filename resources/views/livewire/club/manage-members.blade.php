@@ -23,7 +23,7 @@
         <a href="{{ route('club.index') }}" class="px-3 py-2 text-xs text-white bg-gray-600 rounded hover:bg-gray-700">
             Back to Clubs
         </a>
-        <button wire:click="$set('showAddModal', true)" class="px-3 py-2 text-xs text-white bg-green-600 rounded hover:bg-green-700">
+        <button wire:click="openAddModal" class="px-3 py-2 text-xs text-white bg-green-600 rounded hover:bg-green-700">
             Add Member
         </button>
         <button wire:click="openImportModal" class="px-3 py-2 text-xs text-white bg-indigo-600 rounded hover:bg-indigo-700">
@@ -37,6 +37,40 @@
     {{-- Members Count --}}
     <div class="mb-4">
         <p class="text-sm text-gray-600">Total Members: <span class="font-semibold">{{ $members->count() }}</span></p>
+    </div>
+
+    <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <input
+            type="text"
+            wire:model.live.debounce.300ms="memberSearch"
+            placeholder="Search by student ID, name, department, year level, or email..."
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 lg:flex-1"
+        >
+
+        <select
+            wire:model.live="memberDepartmentFilter"
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 lg:w-72"
+        >
+            <option value="">All Departments</option>
+            @foreach($departments as $department)
+                <option value="{{ $department->id }}">
+                    {{ $department->name }}{{ $department->abbreviation ? ' (' . $department->abbreviation . ')' : '' }}
+                </option>
+            @endforeach
+        </select>
+
+        <select
+            wire:model.live="memberYearLevelFilter"
+            class="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 lg:w-48"
+        >
+            <option value="">All Year Levels</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+            <option value="5">5th Year</option>
+            <option value="6">6th Year</option>
+        </select>
     </div>
 
     {{-- Members Table --}}
@@ -81,39 +115,72 @@
     {{-- Add Member Modal --}}
     @if($showAddModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">Add New Member</h3>
-                    <button wire:click="$set('showAddModal', false)" class="text-gray-400 hover:text-gray-600">
+                    <button wire:click="closeAddModal" class="text-gray-400 hover:text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
 
-                <form wire:submit.prevent="addMember">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Student</label>
-                        <select 
-                            wire:model="selectedStudent" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">-- Select Student --</option>
-                            @foreach($availableStudents as $student)
-                                <option value="{{ $student->id }}">
-                                    {{ $student->studentDetail->student_id ?? 'N/A' }} - {{ $student->fullname }} 
-                                    ({{ $student->studentDetail->department->abbreviation ?? 'N/A' }} - Year {{ $student->studentDetail->year_level ?? 'N/A' }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('selectedStudent') 
-                            <span class="text-red-500 text-sm">{{ $message }}</span> 
+                <form wire:submit.prevent="addMember" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Student *</label>
+
+                        <div class="relative mb-3">
+                            <input
+                                type="text"
+                                wire:model.live.debounce.300ms="studentSearch"
+                                placeholder="Search by name, student ID, department, or year..."
+                                class="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+
+                        <div class="border border-gray-300 rounded-lg max-h-64 overflow-y-auto bg-gray-50">
+                            @forelse($availableStudents as $student)
+                                <label class="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-200 last:border-b-0 transition">
+                                    <input
+                                        type="radio"
+                                        wire:model="selectedStudent"
+                                        value="{{ $student->id }}"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900 truncate">{{ $student->fullname }}</p>
+                                        <p class="text-xs text-gray-500">
+                                            Student ID: {{ $student->studentDetail->student_id ?? 'N/A' }}
+                                            @if($student->studentDetail && $student->studentDetail->department)
+                                                • {{ $student->studentDetail->department->abbreviation ?? $student->studentDetail->department->name }}
+                                            @endif
+                                            @if($student->studentDetail && $student->studentDetail->year_level)
+                                                • Year {{ $student->studentDetail->year_level }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </label>
+                            @empty
+                                <div class="p-8 text-center text-gray-500">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    <p class="text-sm">No students found</p>
+                                    <p class="text-xs text-gray-400 mt-1">Try adjusting your search</p>
+                                </div>
+                            @endforelse
+                        </div>
+
+                        @error('selectedStudent')
+                            <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
                         @enderror
                     </div>
 
                     <div class="flex gap-2 justify-end">
                         <button 
                             type="button"
-                            wire:click="$set('showAddModal', false)" 
+                            wire:click="closeAddModal"
                             class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">
                             Cancel
                         </button>
