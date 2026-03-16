@@ -18,14 +18,14 @@
             <input type="text"
                    wire:model.live.debounce.300ms="searchQuery"
                    placeholder="Search name or student ID..."
-                   class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 w-64" />
+                   class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 w-64 bg-white" />
             <svg class="absolute left-2.5 top-2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
         </div>
 
         <select wire:model.live="yearLevelFilter"
-                class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm bg-white">
             <option value="">All Year Levels</option>
             @foreach($availableYearLevels as $year)
                 <option value="{{ $year }}">Year {{ $year }}</option>

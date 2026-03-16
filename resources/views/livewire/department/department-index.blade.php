@@ -22,27 +22,27 @@
         </div>
     @endif
 
-    <div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white">
-        <table class="min-w-full border-collapse text-sm text-left text-gray-700">
-            <thead class="bg-gray-100 text-xs uppercase font-semibold text-gray-600">
+    <div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white dark:bg-gray-800">
+        <table class="min-w-full border-collapse text-sm text-left text-gray-700 dark:text-gray-200">
+            <thead class="bg-gray-100 dark:bg-gray-900 text-xs uppercase font-semibold text-gray-600 dark:text-gray-400">
                 <tr>
                     <th scope="col" class="px-6 py-3">Department Name</th>
                     <th scope="col" class="px-6 py-3">Abbreviation</th>
                     <th scope="col" class="px-6 py-3">Dean / Program Head</th>
                     <th scope="col" class="px-6 py-3 w-80">Actions</th>
                 </tr>
-                </thead>
-                <tbody>
+            </thead>
+            <tbody>
                 @foreach ($departments as $department)
-                    <tr class="border-b hover:bg-gray-50 transition">
-                        <td class="px-6 py-2">{{$department->name}}</td>
-                        <td class="px-6 py-2">{{$department->Abbreviation}}</td>
-                        <td class="px-6 py-2">{{$department->manager_name}}</td>
-                        <td class="px-6 py-2">
-                            <button wire:click="openShowModal({{ $department->id }})" class="px-3 py-2 text-xs text-white bg-gray-600 rounded hover:bg-gray-700">Show</button>
-                            <button wire:click="openEditModal({{ $department->id }})" class="px-3 py-2 text-xs text-white bg-blue-600 rounded hover:bg-blue-700">Edit</button>
-                            <a href="{{route('department.signatories', $department->id)}}" class="px-3 py-2 text-xs text-white bg-purple-600 rounded hover:bg-purple-700">Signatories</a>
-                            <button wire:click="confirmDelete({{ $department->id }})" class="px-3 py-2 text-xs text-white bg-red-600 rounded hover:bg-red-700">Delete</button>
+                    <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <td class="px-6 py-2">{{ $department->name }}</td>
+                        <td class="px-6 py-2">{{ $department->Abbreviation }}</td>
+                        <td class="px-6 py-2">{{ $department->manager_name }}</td>
+                        <td class="px-6 py-2 space-x-1">
+                            <button wire:click="openShowModal({{ $department->id }})" class="px-3 py-2 text-xs text-white bg-gray-600 dark:bg-gray-700 rounded hover:bg-gray-700 dark:hover:bg-gray-600">Show</button>
+                            <button wire:click="openEditModal({{ $department->id }})" class="px-3 py-2 text-xs text-white bg-blue-600 dark:bg-blue-700 rounded hover:bg-blue-700 dark:hover:bg-blue-800">Edit</button>
+                            <a href="{{ route('department.signatories', $department->id) }}" class="px-3 py-2 text-xs text-white bg-purple-600 dark:bg-purple-700 rounded hover:bg-purple-700 dark:hover:bg-purple-800">Signatories</a>
+                            <button wire:click="confirmDelete({{ $department->id }})" class="px-3 py-2 text-xs text-white bg-red-600 dark:bg-red-700 rounded hover:bg-red-700 dark:hover:bg-red-800">Delete</button>
                         </td>
                     </tr>
                 @endforeach
@@ -77,7 +77,7 @@
 
             {{-- Dean / Program Head search --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Dean / Program Head</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-white">Dean / Program Head</label>
 
                 @if($manager_id)
                     {{-- Selected state --}}
@@ -90,7 +90,7 @@
                         type="text"
                         wire:model.live.debounce.300ms="managerSearch"
                         placeholder="Search by name or ID..."
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:text-white"
                     />
 
                     @if($managerSearch !== '' && $managerResults->isEmpty())

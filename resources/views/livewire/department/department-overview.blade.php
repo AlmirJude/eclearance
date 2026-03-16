@@ -2,7 +2,7 @@
     {{-- Header --}}
     <div class="mb-6">
         <flux:heading size="xl">{{ $department->name }}</flux:heading>
-        <p class="text-gray-600 mt-2">Department Overview & Clearance Analytics</p>
+        <flux:subheading size="lg" class="mt-1">Department Overview & Clearance Analytics</flux:subheading>
     </div>
 
     <flux:separator class="my-6" />

@@ -20,77 +20,77 @@
     </div>
 
     {{-- Assignments Table --}}
-    <div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white">
-        <table class="min-w-full border-collapse text-sm text-left text-gray-700">
-            <thead class="bg-gray-100 text-xs uppercase font-semibold text-gray-600">
-                <tr>
-                    <th scope="col" class="px-6 py-3">Adviser</th>
-                    <th scope="col" class="px-6 py-3">Department</th>
-                    <th scope="col" class="px-6 py-3">Year Level</th>
-                    <th scope="col" class="px-6 py-3">Section</th>
-                    <th scope="col" class="px-6 py-3">Academic Year</th>
-                    <th scope="col" class="px-6 py-3">Status</th>
-                    <th scope="col" class="px-6 py-3">Actions</th>
+<div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white dark:bg-gray-800">
+    <table class="min-w-full border-collapse text-sm text-left text-gray-700 dark:text-gray-200">
+        <thead class="bg-gray-100 dark:bg-gray-900 text-xs uppercase font-semibold text-gray-600 dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3">Adviser</th>
+                <th scope="col" class="px-6 py-3">Department</th>
+                <th scope="col" class="px-6 py-3">Year Level</th>
+                <th scope="col" class="px-6 py-3">Section</th>
+                <th scope="col" class="px-6 py-3">Academic Year</th>
+                <th scope="col" class="px-6 py-3">Status</th>
+                <th scope="col" class="px-6 py-3">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($assignments as $assignment)
+                <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                    <td class="px-6 py-2">
+                        {{ $assignment->adviser->fullname ?? 'N/A' }}
+                        <br><span class="text-xs text-gray-500 dark:text-gray-400">{{ $assignment->adviser->staffDetail->employee_id ?? '' }}</span>
+                    </td>
+                    <td class="px-6 py-2">{{ $assignment->department->name ?? 'N/A' }}</td>
+                    <td class="px-6 py-2">
+                        @if($assignment->year_levels)
+                            @php
+                                $levels = $assignment->year_levels;
+                                sort($levels);
+                            @endphp
+                            @foreach($levels as $level)
+                                <span class="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded mr-1 mb-1">Year {{ $level }}</span>
+                            @endforeach
+                        @else
+                            N/A
+                        @endif
+                    </td>
+                    <td class="px-6 py-2">{{ $assignment->section ?: 'All' }}</td>
+                    <td class="px-6 py-2">{{ $assignment->academic_year }}</td>
+                    <td class="px-6 py-2">
+                        @if($assignment->is_active)
+                            <span class="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded">Active</span>
+                        @else
+                            <span class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">Inactive</span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-2 space-x-1">
+                        <button 
+                            wire:click="openEditModal({{ $assignment->id }})" 
+                            class="px-3 py-2 text-xs text-white bg-blue-600 dark:bg-blue-700 rounded hover:bg-blue-700 dark:hover:bg-blue-800">
+                            Edit
+                        </button>
+                        <button 
+                            wire:click="toggleActive({{ $assignment->id }})" 
+                            class="px-3 py-2 text-xs text-white bg-yellow-600 dark:bg-yellow-700 rounded hover:bg-yellow-700 dark:hover:bg-yellow-800">
+                            {{ $assignment->is_active ? 'Deactivate' : 'Activate' }}
+                        </button>
+                        <button 
+                            wire:click="confirmDelete({{ $assignment->id }})" 
+                            class="px-3 py-2 text-xs text-white bg-red-600 dark:bg-red-700 rounded hover:bg-red-700 dark:hover:bg-red-800">
+                            Delete
+                        </button>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse ($assignments as $assignment)
-                    <tr class="border-b hover:bg-gray-50 transition">
-                        <td class="px-6 py-2">
-                            {{ $assignment->adviser->fullname ?? 'N/A' }}
-                            <br><span class="text-xs text-gray-500">{{ $assignment->adviser->staffDetail->employee_id ?? '' }}</span>
-                        </td>
-                        <td class="px-6 py-2">{{ $assignment->department->name ?? 'N/A' }}</td>
-                        <td class="px-6 py-2">
-                            @if($assignment->year_levels)
-                                @php
-                                    $levels = $assignment->year_levels;
-                                    sort($levels);
-                                @endphp
-                                @foreach($levels as $level)
-                                    <span class="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded mr-1 mb-1">Year {{ $level }}</span>
-                                @endforeach
-                            @else
-                                N/A
-                            @endif
-                        </td>
-                        <td class="px-6 py-2">{{ $assignment->section ?: 'All' }}</td>
-                        <td class="px-6 py-2">{{ $assignment->academic_year }}</td>
-                        <td class="px-6 py-2">
-                            @if($assignment->is_active)
-                                <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Active</span>
-                            @else
-                                <span class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">Inactive</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-2 space-x-1">
-                            <button 
-                                wire:click="openEditModal({{ $assignment->id }})" 
-                                class="px-3 py-2 text-xs text-white bg-blue-600 rounded hover:bg-blue-700">
-                                Edit
-                            </button>
-                            <button 
-                                wire:click="toggleActive({{ $assignment->id }})" 
-                                class="px-3 py-2 text-xs text-white bg-yellow-600 rounded hover:bg-yellow-700">
-                                {{ $assignment->is_active ? 'Deactivate' : 'Activate' }}
-                            </button>
-                            <button 
-                                wire:click="confirmDelete({{ $assignment->id }})" 
-                                class="px-3 py-2 text-xs text-white bg-red-600 rounded hover:bg-red-700">
-                                Delete
-                            </button>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                            No homeroom assignments yet. Click "Add Homeroom Assignment" to get started.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @empty
+                <tr>
+                    <td colspan="7" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                        No homeroom assignments yet. Click "Add Homeroom Assignment" to get started.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
     {{-- ── Add / Edit Homeroom Modal ─────────────────────────────────────────── --}}
     <flux:modal name="homeroom-modal" class="min-w-[38rem]" wire:model="showAddModal">
@@ -102,7 +102,7 @@
 
             {{-- Adviser searchable picker --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Homeroom Adviser *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-white">Homeroom Adviser *</label>
                 @if($adviser_id)
                     <div class="flex items-center justify-between rounded-lg border border-green-300 bg-green-50 px-3 py-2">
                         <span class="text-sm font-medium text-green-800">{{ $adviserSearch }}</span>
@@ -111,7 +111,7 @@
                 @else
                     <input type="text" wire:model.live.debounce.300ms="adviserSearch"
                         placeholder="Search by name or ID..."
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:text-white" />
 
                     @if(strlen(trim($adviserSearch)) >= 1 && $adviserResults->isEmpty())
                         <p class="mt-1 text-xs text-gray-400">No staff/admin found matching "{{ $adviserSearch }}".</p>
@@ -142,12 +142,12 @@
 
             {{-- Department --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-white">Department *</label>
                 <select wire:model="department_id"
-                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                    <option value="">-- Select Department --</option>
+                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:text-white">
+                    <option value="" class="dark:text-black">-- Select Department --</option>
                     @foreach($departments as $department)
-                        <option value="{{ $department->id }}">{{ $department->name }}</option>
+                        <option value="{{ $department->id }}" class="dark:text-black">{{ $department->name }}</option>
                     @endforeach
                 </select>
                 @error('department_id') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
@@ -155,12 +155,12 @@
 
             {{-- Year Levels --}}
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Year Levels * (select one or more)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-white">Year Levels * (select one or more)</label>
                 <div class="grid grid-cols-3 gap-2">
                     @foreach([1, 2, 3, 4, 5, 6] as $level)
-                        <label class="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                        <label class="flex items-center gap-2 p-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-gray-900 dark:text-gray-100">
                             <input type="checkbox" wire:model="year_levels" value="{{ $level }}"
-                                class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                class="w-4 h-4 text-indigo-600 dark:text-indigo-400 border-gray-300 dark:border-gray-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 dark:bg-gray-800">
                             <span class="text-sm">Year {{ $level }}</span>
                         </label>
                     @endforeach
@@ -183,7 +183,7 @@
             {{-- Status --}}
             <div class="flex items-center gap-2">
                 <input type="checkbox" wire:model="is_active" id="is_active_modal" class="rounded" />
-                <label for="is_active_modal" class="text-sm text-gray-700">Active</label>
+                <label for="is_active_modal" class="text-sm text-gray-700 dark:text-white">Active</label>
             </div>
 
             <div class="flex gap-2 justify-end pt-2">
