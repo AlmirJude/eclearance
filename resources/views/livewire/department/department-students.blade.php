@@ -4,11 +4,6 @@
         <flux:subheading size="lg" class="mb-6">{{ __('Manage Students') }}</flux:subheading>
         <flux:separator variant="subtle" />
     </div>
-    @if(in_array(auth()->user()->role, ['superadmin', 'admin']))
-        <button wire:click='view({{$student->id}})' class="px-3 py-2 text-xs text-white bg-green-600 rounded hover:bg-green-700">View</button>
-    @endif      
-
-
         @session('success')
             <div class="mb-4 mt-6 rounded-lg bg-green-100 border border-green-300 text-green-800 px-4 py-3 flex items-center justify-between" role="alert">
                 <div class="flex items-center gap-2">
@@ -133,7 +128,7 @@
             </div>
 
             <div class="flex gap-2 justify-end">
-                <flux:button variant="ghost" wire:click="closeModalViewStaff">Close</flux:button>
+                <flux:button variant="ghost" wire:click="closeModalViewStudent">Close</flux:button>
                 <flux:button variant="primary" href="{{ route('edit.students', $selectedStudent->user_id) }}">Edit</flux:button>
             </div>
         </flux:modal>
