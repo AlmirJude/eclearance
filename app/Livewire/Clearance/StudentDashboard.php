@@ -99,6 +99,8 @@ class StudentDashboard extends Component
             $item['required_count'] = $requiredReqs;
             $item['submitted_count'] = $submittedCount;
             $item['approved_count'] = $approvedCount;
+            $item['pending_count'] = $pendingCount;
+            $item['rejected_count'] = $rejectedCount;
             $item['requirement_status'] = $reqStatus;
             
             return $item;

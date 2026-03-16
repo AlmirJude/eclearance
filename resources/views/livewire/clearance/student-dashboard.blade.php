@@ -270,7 +270,11 @@
                                             <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            {{ $item['submitted_count'] }} submitted, awaiting review
+                                            @if(($item['approved_count'] ?? 0) > 0)
+                                                {{ $item['approved_count'] }} approved, {{ $item['pending_count'] ?? 0 }} awaiting review
+                                            @else
+                                                {{ $item['pending_count'] ?? $item['submitted_count'] }} submitted, awaiting review
+                                            @endif
                                         </span>
                                     @elseif($item['requirement_status'] === 'rejected')
                                         <span class="inline-flex items-center text-xs text-red-600 dark:text-red-400">

@@ -36,6 +36,13 @@ class SignatoryDashboard extends Component
     public $viewingItemId = null;
     public $viewingStudentName = '';
     public $studentSubmissions = [];
+
+    // Submission Review Modal
+    public $showReviewModal = false;
+    public $reviewingSubmissionId = null;
+    public $reviewingRequirementName = '';
+    public $reviewAction = 'approve'; // 'approve' or 'reject'
+    public $reviewRemarks = '';
     
     // Status filter
     public $statusFilter = 'pending'; // 'pending', 'approved', 'rejected'
@@ -472,10 +479,18 @@ class SignatoryDashboard extends Component
         $this->viewingStudentName = $studentDetail ? $studentDetail->first_name . ' ' . $studentDetail->last_name : 'Unknown';
         
         // Get all submissions for this clearance item
-        $this->studentSubmissions = RequirementSubmission::with('requirement')
+        $this->studentSubmissions = RequirementSubmission::with(['requirement', 'reviewer.staffDetail'])
             ->where('clearance_item_id', $itemId)
+            ->orderByDesc('created_at')
             ->get()
             ->map(function($submission) {
+                $reviewerName = null;
+                if ($submission->reviewer) {
+                    $reviewerName = $submission->reviewer->staffDetail
+                        ? trim(($submission->reviewer->staffDetail->first_name ?? '') . ' ' . ($submission->reviewer->staffDetail->last_name ?? ''))
+                        : $submission->reviewer->email;
+                }
+
                 return [
                     'id' => $submission->id,
                     'requirement_name' => $submission->requirement->name ?? 'Unknown',
@@ -484,11 +499,121 @@ class SignatoryDashboard extends Component
                     'notes' => $submission->notes,
                     'status' => $submission->status,
                     'submitted_at' => $submission->created_at->format('M d, Y H:i'),
+                    'reviewed_at' => $submission->reviewed_at?->format('M d, Y H:i'),
+                    'reviewed_by' => $reviewerName,
+                    'review_remarks' => $submission->review_remarks,
                 ];
             })
             ->toArray();
         
         $this->showSubmissionsModal = true;
+    }
+
+    protected function canReviewSubmission(RequirementSubmission $submission): bool
+    {
+        $item = $submission->clearanceItem;
+
+        if (!$item || !$this->selectedEntity) {
+            return false;
+        }
+
+        // Prevent cross-entity/tampered review attempts
+        if ($item->signable_type !== $this->selectedEntityType || (int) $item->signable_id !== (int) $this->selectedEntity['id']) {
+            return false;
+        }
+
+        $resolver = new ClearanceResolver();
+        if (!$resolver->isAuthorizedSignatory(Auth::user(), $item->signable_type, (int) $item->signable_id)) {
+            return false;
+        }
+
+        if (!$this->hasSignatoryRestrictions) {
+            return true;
+        }
+
+        $studentDetail = $item->request->student->studentDetail ?? null;
+        if (!$studentDetail) {
+            return false;
+        }
+
+        if (!empty($this->signatoryDeptRestrictions) && !in_array((int) $studentDetail->department_id, $this->signatoryDeptRestrictions, true)) {
+            return false;
+        }
+
+        if (!empty($this->signatoryYearRestrictions) && !in_array((int) $studentDetail->year_level, $this->signatoryYearRestrictions, true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function openReviewModal($submissionId, $action = 'approve')
+    {
+        $submission = RequirementSubmission::with(['requirement', 'clearanceItem.request.student.studentDetail'])->find($submissionId);
+
+        if (!$submission) {
+            session()->flash('error', 'Submission not found.');
+            return;
+        }
+
+        if (!$this->canReviewSubmission($submission)) {
+            session()->flash('error', 'You are not authorized to review this submission.');
+            return;
+        }
+
+        $this->reviewingSubmissionId = $submission->id;
+        $this->reviewingRequirementName = $submission->requirement->name ?? 'Requirement';
+        $this->reviewAction = $action;
+        $this->reviewRemarks = '';
+        $this->showReviewModal = true;
+    }
+
+    public function reviewSubmission()
+    {
+        if (!$this->reviewingSubmissionId) {
+            return;
+        }
+
+        if ($this->reviewAction === 'reject' && empty(trim($this->reviewRemarks))) {
+            session()->flash('error', 'Please provide a reason for rejection.');
+            return;
+        }
+
+        $submission = RequirementSubmission::with(['requirement', 'clearanceItem.request.student.studentDetail'])->find($this->reviewingSubmissionId);
+
+        if (!$submission) {
+            session()->flash('error', 'Submission not found.');
+            $this->showReviewModal = false;
+            return;
+        }
+
+        if (!$this->canReviewSubmission($submission)) {
+            session()->flash('error', 'You are not authorized to review this submission.');
+            $this->showReviewModal = false;
+            return;
+        }
+
+        $status = $this->reviewAction === 'approve' ? 'approved' : 'rejected';
+
+        $submission->update([
+            'status' => $status,
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+            'review_remarks' => $this->reviewRemarks ?: null,
+        ]);
+
+        $this->showReviewModal = false;
+        $this->reviewingSubmissionId = null;
+        $this->reviewingRequirementName = '';
+        $this->reviewRemarks = '';
+
+        if ($this->viewingItemId) {
+            $this->viewSubmissions($this->viewingItemId);
+        }
+
+        $this->loadFilteredItems();
+
+        session()->flash('success', $status === 'approved' ? 'Requirement approved successfully.' : 'Requirement rejected.');
     }
     
     public function sign()

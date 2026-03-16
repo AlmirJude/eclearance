@@ -397,22 +397,60 @@
                                             <span class="font-medium">Student Notes:</span> {{ $submission['notes'] }}
                                         </div>
                                     @endif
+
+                                    @if(!empty($submission['review_remarks']))
+                                        <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                            <span class="font-medium">Reviewer Remarks:</span> {{ $submission['review_remarks'] }}
+                                        </div>
+                                    @endif
                                     
-                                    <div class="mt-3 flex items-center justify-between">
-                                        <span class="text-xs text-gray-400 dark:text-gray-500">Submitted: {{ $submission['submitted_at'] }}</span>
-                                        
-                                        @if($submission['file_path'])
-                                            <a href="{{ Storage::url($submission['file_path']) }}" 
-                                            target="_blank"
-                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/30 rounded-lg transition">
-                                                <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                Download File
-                                            </a>
-                                        @else
-                                            <span class="text-xs text-gray-400 dark:text-gray-500 italic">No file attached</span>
-                                        @endif
+                                    <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                                        <div class="text-xs text-gray-400 dark:text-gray-500">
+                                            <span>Submitted: {{ $submission['submitted_at'] }}</span>
+                                            @if(!empty($submission['reviewed_at']))
+                                                <span class="mx-1">•</span>
+                                                <span>Reviewed: {{ $submission['reviewed_at'] }}</span>
+                                                @if(!empty($submission['reviewed_by']))
+                                                    <span> by {{ $submission['reviewed_by'] }}</span>
+                                                @endif
+                                            @endif
+                                        </div>
+
+                                        <div class="flex items-center gap-2">
+                                            @if($submission['file_path'])
+                                                <a href="{{ Storage::url($submission['file_path']) }}" 
+                                                target="_blank"
+                                                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/30 rounded-lg transition">
+                                                    <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Download File
+                                                </a>
+                                            @else
+                                                <span class="text-xs text-gray-400 dark:text-gray-500 italic mr-1">No file attached</span>
+                                            @endif
+
+                                            @if($submission['status'] === 'pending')
+                                                <button wire:click="openReviewModal({{ $submission['id'] }}, 'approve')"
+                                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 transition">
+                                                    Approve
+                                                </button>
+                                                <button wire:click="openReviewModal({{ $submission['id'] }}, 'reject')"
+                                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 transition">
+                                                    Reject
+                                                </button>
+                                            @elseif($submission['status'] === 'approved')
+                                                <button wire:click="openReviewModal({{ $submission['id'] }}, 'reject')"
+                                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/40 transition">
+                                                    Reject
+                                                </button>
+                                            @elseif($submission['status'] === 'rejected')
+                                                <button wire:click="openReviewModal({{ $submission['id'] }}, 'approve')"
+                                                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-800/40 transition">
+                                                    Approve
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -423,6 +461,52 @@
                     <flux:button wire:click="$set('showSubmissionsModal', false)" variant="ghost" class="dark:text-gray-300 dark:hover:text-white">
                         Close
                     </flux:button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Review Submission Modal --}}
+    @if($showReviewModal)
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 flex items-center justify-center z-50">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        {{ $reviewAction === 'approve' ? 'Approve Requirement' : 'Reject Requirement' }}
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        {{ $reviewingRequirementName }}
+                    </p>
+                </div>
+                <div class="px-6 py-4">
+                    @if($reviewAction === 'approve')
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Confirm approval for this submitted requirement.</p>
+                    @else
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Please provide a reason for rejection.</p>
+                    @endif
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Remarks {{ $reviewAction === 'reject' ? '(Required)' : '(Optional)' }}
+                        </label>
+                        <textarea wire:model="reviewRemarks" rows="3"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                                placeholder="Add review remarks..."></textarea>
+                    </div>
+                </div>
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 flex justify-end space-x-3 rounded-b-lg">
+                    <flux:button wire:click="$set('showReviewModal', false)" variant="ghost" class="dark:text-gray-300 dark:hover:text-white">
+                        Cancel
+                    </flux:button>
+                    @if($reviewAction === 'approve')
+                        <flux:button wire:click="reviewSubmission" variant="primary" class="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800">
+                            Approve
+                        </flux:button>
+                    @else
+                        <flux:button wire:click="reviewSubmission" variant="primary" class="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800">
+                            Reject
+                        </flux:button>
+                    @endif
                 </div>
             </div>
         </div>
