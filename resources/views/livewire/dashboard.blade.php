@@ -193,60 +193,60 @@
     @elseif($user->role === 'student')
 
         @if(!$activePeriod)
-            <div class="rounded-xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-700">
+            <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 p-6 text-sm text-amber-700 dark:text-amber-300">
                 There is no active clearance period at the moment. Check back later.
             </div>
         @elseif(!$clearanceRequest)
-            <div class="rounded-xl border border-blue-200 bg-blue-50 p-6 text-sm text-blue-700">
+            <div class="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 p-6 text-sm text-blue-700 dark:text-blue-300">
                 You have no clearance request for the current period yet.
-                <a href="{{ route('clearance.student') }}" class="ml-2 font-semibold underline">Go to My Clearance →</a>
+                <a href="{{ route('clearance.student') }}" class="ml-2 font-semibold underline dark:text-blue-300 dark:hover:text-blue-200">Go to My Clearance →</a>
             </div>
         @else
             {{-- Stat cards --}}
             <div class="grid gap-4 md:grid-cols-3">
                 {{-- Progress card --}}
-                <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Clearance Progress</p>
-                    <p class="mt-2 text-3xl font-bold text-indigo-600">{{ $clearanceProgress }}%</p>
-                    <div class="mt-3 h-2 rounded-full bg-gray-100">
-                        <div class="h-2 rounded-full bg-indigo-500 transition-all duration-500"
-                             style="width: {{ $clearanceProgress }}%"></div>
+                <div class="rounded-xl border border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Clearance Progress</p>
+                    <p class="mt-2 text-3xl font-bold text-indigo-600 dark:text-indigo-400">{{ $clearanceProgress }}%</p>
+                    <div class="mt-3 h-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                        <div class="h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 transition-all duration-500"
+                            style="width: {{ $clearanceProgress }}%"></div>
                     </div>
-                    <a href="{{ route('clearance.student') }}" class="mt-3 inline-block text-xs text-indigo-500 hover:underline">View Details →</a>
+                    <a href="{{ route('clearance.student') }}" class="mt-3 inline-block text-xs text-indigo-500 dark:text-indigo-400 hover:underline">View Details →</a>
                 </div>
 
-                <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-yellow-700">Pending Items</p>
-                    <p class="mt-2 text-3xl font-bold text-yellow-600">{{ $studentPending }}</p>
-                    <p class="mt-1 text-xs text-yellow-600">Awaiting signature</p>
+                <div class="rounded-xl border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/30 p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-yellow-700 dark:text-yellow-400">Pending Items</p>
+                    <p class="mt-2 text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ $studentPending }}</p>
+                    <p class="mt-1 text-xs text-yellow-600 dark:text-yellow-400">Awaiting signature</p>
                 </div>
 
-                <div class="rounded-xl border border-green-200 bg-green-50 p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-green-700">Approved Items</p>
-                    <p class="mt-2 text-3xl font-bold text-green-600">{{ $studentApproved }}</p>
+                <div class="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30 p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">Approved Items</p>
+                    <p class="mt-2 text-3xl font-bold text-green-600 dark:text-green-400">{{ $studentApproved }}</p>
                     @if($studentRejected > 0)
-                        <p class="mt-1 text-xs text-red-500">{{ $studentRejected }} rejected</p>
+                        <p class="mt-1 text-xs text-red-500 dark:text-red-400">{{ $studentRejected }} rejected</p>
                     @endif
                 </div>
             </div>
 
             {{-- Clearance status banner --}}
             <div class="rounded-xl border p-5
-                @if($clearanceRequest->status === 'completed') border-green-300 bg-green-50
-                @else border-yellow-200 bg-yellow-50 @endif">
+                @if($clearanceRequest->status === 'completed') border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/30
+                @else border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/30 @endif">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-semibold
-                            @if($clearanceRequest->status === 'completed') text-green-700
-                            @else text-yellow-700 @endif">
+                            @if($clearanceRequest->status === 'completed') text-green-700 dark:text-green-400
+                            @else text-yellow-700 dark:text-yellow-400 @endif">
                             Clearance Status: <span class="capitalize">{{ $clearanceRequest->status }}</span>
                         </p>
-                        <p class="text-xs mt-1 text-gray-500">
+                        <p class="text-xs mt-1 text-gray-500 dark:text-gray-400">
                             Period: {{ $activePeriod->name }} &mdash; {{ $activePeriod->academic_year }}, {{ $activePeriod->semester }}
                         </p>
                     </div>
                     <a href="{{ route('clearance.student') }}"
-                       class="px-4 py-2 text-xs text-white bg-indigo-600 rounded hover:bg-indigo-700">
+                    class="px-4 py-2 text-xs text-white bg-indigo-600 dark:bg-indigo-700 rounded hover:bg-indigo-700 dark:hover:bg-indigo-800">
                         View My Clearance
                     </a>
                 </div>
@@ -255,11 +255,11 @@
 
         {{-- Clubs --}}
         @if(count($studentClubs))
-            <div class="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">My Clubs</p>
+            <div class="rounded-xl border border-neutral-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">My Clubs</p>
                 <div class="flex flex-wrap gap-2">
                     @foreach($studentClubs as $club)
-                        <span class="inline-block px-3 py-1 text-xs rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        <span class="inline-block px-3 py-1 text-xs rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
                             {{ $club->name }}
                         </span>
                     @endforeach
