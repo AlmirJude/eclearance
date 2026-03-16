@@ -7,11 +7,13 @@ use App\Models\ClearancePeriod;
 use App\Models\ClearanceRequest;
 use App\Models\Club;
 use App\Models\Department;
+use App\Models\HomeroomAssignment;
 use App\Models\Office;
 use App\Models\StaffDetail;
 use App\Models\StudentDetail;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\Attributes\Layout; // 1. Add this import
 
@@ -108,21 +110,99 @@ class Dashboard extends Component
             // Pending items this user still needs to sign (via signatory pivot tables only)
             $deptIds   = $user->departmentSignatories()->wherePivot('is_active', true)->pluck('departments.id');
             $clubIds   = $user->clubSignatories()->wherePivot('is_active', true)->pluck('clubs.id');
-            $officeIds = $user->officeSignatories()->wherePivot('is_active', true)->pluck('offices.id');
+            $managerOfficeIds = collect($this->managedOffices)->pluck('id')->map(fn($id) => (int) $id)->all();
+            $officeSignatoryScopes = DB::table('office_signatories')
+                ->where('user_id', $user->id)
+                ->where('is_active', true)
+                ->select('office_id', 'departments', 'year_levels')
+                ->get()
+                ->map(function ($row) use ($managerOfficeIds) {
+                    $departmentIds = array_values(array_filter(array_map('intval', json_decode($row->departments ?? '[]', true) ?? [])));
+                    $yearLevels = array_values(array_filter(array_map('intval', json_decode($row->year_levels ?? '[]', true) ?? [])));
+
+                    // Office managers are unrestricted for their own office
+                    if (in_array((int) $row->office_id, $managerOfficeIds, true)) {
+                        $departmentIds = [];
+                        $yearLevels = [];
+                    }
+
+                    return (object) [
+                        'office_id' => (int) $row->office_id,
+                        'department_ids' => $departmentIds,
+                        'year_levels' => $yearLevels,
+                    ];
+                });
+            $homeroomIds = HomeroomAssignment::query()
+                ->where('adviser_id', $user->id)
+                ->where('is_active', true)
+                ->pluck('id');
+            $studentGovernmentIds = $user->studentGovernmentOfficerships()
+                ->where('can_sign', true)
+                ->where('is_active', true)
+                ->pluck('student_government_id');
+
+            $hasSigningScope = $deptIds->isNotEmpty()
+                || $clubIds->isNotEmpty()
+                || $officeSignatoryScopes->isNotEmpty()
+                || $homeroomIds->isNotEmpty()
+                || $studentGovernmentIds->isNotEmpty();
+
+            if (! $hasSigningScope) {
+                $this->pendingToSign = 0;
+                return;
+            }
 
             $this->pendingToSign = ClearanceItem::where('status', 'pending')
                 ->whereHas('request', fn($q) => $q->where('period_id', $this->activePeriod->id))
-                ->where(function ($q) use ($deptIds, $clubIds, $officeIds) {
-                    $q->where(function ($q2) use ($deptIds) {
-                        $q2->where('signable_type', 'App\\Models\\Department')
-                           ->whereIn('signable_id', $deptIds);
-                    })->orWhere(function ($q2) use ($clubIds) {
-                        $q2->where('signable_type', 'App\\Models\\Club')
-                           ->whereIn('signable_id', $clubIds);
-                    })->orWhere(function ($q2) use ($officeIds) {
-                        $q2->where('signable_type', 'App\\Models\\Office')
-                           ->whereIn('signable_id', $officeIds);
-                    });
+                ->where(function ($q) use ($deptIds, $clubIds, $officeSignatoryScopes, $homeroomIds, $studentGovernmentIds) {
+                    if ($deptIds->isNotEmpty()) {
+                        $q->orWhere(function ($q2) use ($deptIds) {
+                            $q2->where('signable_type', 'App\\Models\\Department')
+                                ->whereIn('signable_id', $deptIds);
+                        });
+                    }
+
+                    if ($clubIds->isNotEmpty()) {
+                        $q->orWhere(function ($q2) use ($clubIds) {
+                            $q2->where('signable_type', 'App\\Models\\Club')
+                                ->whereIn('signable_id', $clubIds);
+                        });
+                    }
+
+                    if ($officeSignatoryScopes->isNotEmpty()) {
+                        foreach ($officeSignatoryScopes as $scope) {
+                            $q->orWhere(function ($q2) use ($scope) {
+                                $q2->where('signable_type', 'App\\Models\\Office')
+                                    ->where('signable_id', $scope->office_id);
+
+                                if (!empty($scope->department_ids) || !empty($scope->year_levels)) {
+                                    $q2->whereHas('request.student.studentDetail', function ($sq) use ($scope) {
+                                        if (!empty($scope->department_ids)) {
+                                            $sq->whereIn('department_id', $scope->department_ids);
+                                        }
+
+                                        if (!empty($scope->year_levels)) {
+                                            $sq->whereIn('year_level', $scope->year_levels);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }
+
+                    if ($homeroomIds->isNotEmpty()) {
+                        $q->orWhere(function ($q2) use ($homeroomIds) {
+                            $q2->whereIn('signable_type', ['homeroom_adviser', 'App\\Models\\HomeroomAssignment'])
+                                ->whereIn('signable_id', $homeroomIds);
+                        });
+                    }
+
+                    if ($studentGovernmentIds->isNotEmpty()) {
+                        $q->orWhere(function ($q2) use ($studentGovernmentIds) {
+                            $q2->where('signable_type', 'App\\Models\\StudentGovernment')
+                                ->whereIn('signable_id', $studentGovernmentIds);
+                        });
+                    }
                 })
                 ->count();
         }

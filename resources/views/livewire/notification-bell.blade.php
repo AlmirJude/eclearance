@@ -11,7 +11,7 @@
             <flux:icon.bell class="size-5" />
 
             @if($unreadCount > 0)
-                <span class="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+                <span class="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50 px-1 text-[10px] font-bold leading-none text-red-700 dark:text-red-300">
                     {{ $unreadCount > 99 ? '99+' : $unreadCount }}
                 </span>
             @endif
@@ -47,7 +47,7 @@
                         {{-- Student clearance status item --}}
                         @if($notif['type'] === 'student')
                         <a href="{{ $notif['url'] }}" wire:navigate
-                           class="flex items-start gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors {{ $notif['is_new'] ? 'bg-blue-50 dark:bg-blue-950/30' : '' }}">
+                           class="flex items-start gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition-colors relative">
                             {{-- Status icon --}}
                             <div class="mt-0.5 shrink-0">
                                 @if($notif['status'] === 'approved')
@@ -90,7 +90,7 @@
                             </div>
 
                             @if($notif['is_new'])
-                                <span class="mt-2 h-2 w-2 shrink-0 rounded-full bg-blue-500"></span>
+                                <span class="mt-2 h-2 w-2 shrink-0 rounded-full bg-blue-50 dark:bg-blue-500/100"></span>
                             @endif
                         </a>
 
@@ -107,13 +107,13 @@
                                 <p class="truncate text-sm font-medium text-zinc-800 dark:text-zinc-100">
                                     {{ $notif['entity'] }}
                                 </p>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                <p class="text-xs text-orange-600 dark:text-orange-400">
                                     {{ $notif['display'] }} student{{ (int)$notif['pending'] === 1 ? '' : 's' }} ready to sign
                                 </p>
                             </div>
 
                             {{-- Count badge --}}
-                            <span class="shrink-0 flex h-6 min-w-6 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-bold text-white">
+                            <span class="shrink-0 flex h-6 min-w-6 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/40 px-1.5 text-xs font-bold text-orange-700 dark:text-orange-300">
                                 {{ $notif['display'] }}
                             </span>
                         </a>

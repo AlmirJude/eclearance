@@ -7,8 +7,8 @@
 
     {{-- Flash Messages --}}
     @if (session()->has('success'))
-        <div class="p-4 mb-4 bg-green-50 border border-green-200 rounded-lg">
-            <p class="text-green-700">{{ session('success') }}</p>
+        <div class="p-4 mb-4 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/35 rounded-lg">
+            <p class="text-green-700 dark:text-green-300">{{ session('success') }}</p>
         </div>
     @endif
 
@@ -23,9 +23,9 @@
     </div>
 
     {{-- Signatories Table --}}
-    <div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white">
-        <table class="min-w-full border-collapse text-sm text-left text-gray-700">
-            <thead class="bg-gray-100 text-xs uppercase font-semibold text-gray-600">
+    <div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white dark:bg-zinc-900">
+        <table class="min-w-full border-collapse text-sm text-left text-gray-700 dark:text-zinc-200">
+            <thead class="bg-gray-100 dark:bg-zinc-700 text-xs uppercase font-semibold text-gray-600 dark:text-zinc-300">
                 <tr>
                     <th scope="col" class="px-6 py-3">Staff Member</th>
                     <th scope="col" class="px-6 py-3">Title/Position</th>
@@ -37,10 +37,10 @@
             </thead>
             <tbody>
                 @forelse ($signatories as $signatory)
-                    <tr class="border-b hover:bg-gray-50 transition">
+                    <tr class="border-b hover:bg-gray-50 dark:hover:bg-zinc-800 dark:bg-zinc-800 transition">
                         <td class="px-6 py-2">
                             {{ $signatory->user->fullname ?? 'N/A' }}
-                            <br><span class="text-xs text-gray-500">{{ $signatory->user->staffDetail->employee_id ?? '' }}</span>
+                            <br><span class="text-xs text-gray-500 dark:text-zinc-400">{{ $signatory->user->staffDetail->employee_id ?? '' }}</span>
                         </td>
                         <td class="px-6 py-2">{{ $signatory->title }}</td>
                         <td class="px-6 py-2">
@@ -64,7 +64,7 @@
                                     sort($levels);
                                 @endphp
                                 @foreach($levels as $level)
-                                    <span class="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded mr-1 mb-1">Year {{ $level }}</span>
+                                    <span class="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-700 dark:text-blue-300 rounded mr-1 mb-1">Year {{ $level }}</span>
                                 @endforeach
                             @else
                                 All
@@ -72,9 +72,9 @@
                         </td>
                         <td class="px-6 py-2">
                             @if($signatory->is_active)
-                                <span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Active</span>
+                                <span class="px-2 py-1 text-xs bg-green-100 text-green-700 dark:text-green-300 rounded">Active</span>
                             @else
-                                <span class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">Inactive</span>
+                                <span class="px-2 py-1 text-xs bg-gray-100 dark:bg-zinc-700 text-gray-700 dark:text-zinc-200 rounded">Inactive</span>
                             @endif
                         </td>
                         <td class="px-6 py-2 space-x-1">
@@ -98,7 +98,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-zinc-400">
                             No signatories assigned yet. Click "Add Signatory" to get started.
                         </td>
                     </tr>
@@ -110,10 +110,10 @@
     {{-- Add/Edit Modal --}}
     @if($showAddModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+            <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-xl p-6 w-full max-w-lg">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">{{ $editingId ? 'Edit' : 'Add' }} Signatory</h3>
-                    <button wire:click="$set('showAddModal', false)" class="text-gray-400 hover:text-gray-600">
+                    <button wire:click="$set('showAddModal', false)" class="text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:text-zinc-300">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -124,7 +124,7 @@
                     @if(!$editingId)
                         {{-- Staff Member --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Staff Member *</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-2">Staff Member *</label>
                             
                             {{-- Search Input --}}
                             <div class="relative mb-3">
@@ -132,26 +132,26 @@
                                     type="text" 
                                     wire:model.live.debounce.300ms="staffSearch" 
                                     placeholder="Search by name or employee ID..."
-                                    class="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="w-full px-4 py-2.5 pl-10 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </div>
 
                             {{-- Staff List --}}
-                            <div class="border border-gray-300 rounded-lg max-h-64 overflow-y-auto bg-gray-50">
+                            <div class="border border-gray-300 dark:border-zinc-600 rounded-lg max-h-64 overflow-y-auto bg-gray-50 dark:bg-zinc-800">
                                 @forelse($availableStaff as $staff)
-                                    <label class="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b border-gray-200 last:border-b-0 transition">
+                                    <label class="flex items-center gap-3 p-3 hover:bg-blue-50 dark:bg-blue-500/10 dark:hover:bg-blue-50 dark:bg-blue-500/100/15 cursor-pointer border-b border-gray-200 dark:border-zinc-700 last:border-b-0 transition">
                                         <input 
                                             type="radio" 
                                             wire:model="user_id" 
                                             value="{{ $staff->id }}"
-                                            class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                            class="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-zinc-600 focus:ring-blue-500">
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-semibold text-gray-900 truncate">
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-zinc-100 truncate">
                                                 {{ $staff->fullname }}
                                             </p>
-                                            <p class="text-xs text-gray-500">
+                                            <p class="text-xs text-gray-500 dark:text-zinc-400">
                                                 Employee ID: {{ $staff->staffDetail->employee_id ?? 'N/A' }}
                                                 @if($staff->staffDetail && $staff->staffDetail->position)
                                                     • {{ $staff->staffDetail->position }}
@@ -160,12 +160,12 @@
                                         </div>
                                     </label>
                                 @empty
-                                    <div class="p-8 text-center text-gray-500">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="p-8 text-center text-gray-500 dark:text-zinc-400">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-zinc-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                         </svg>
                                         <p class="text-sm">No staff members found</p>
-                                        <p class="text-xs text-gray-400 mt-1">Try adjusting your search</p>
+                                        <p class="text-xs text-gray-400 dark:text-zinc-500 mt-1">Try adjusting your search</p>
                                     </div>
                                 @endforelse
                             </div>
@@ -175,26 +175,26 @@
 
                     {{-- Title/Position --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Title/Position *</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-2">Title/Position *</label>
                         <input 
                             type="text" 
                             wire:model="title" 
                             placeholder="e.g., SDO Head, Registrar, Librarian"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         @error('title') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Departments --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Departments (Optional - leave empty for all departments)</label>
-                        <div class="border border-gray-300 rounded-lg max-h-40 overflow-y-auto bg-gray-50 p-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-2">Departments (Optional - leave empty for all departments)</label>
+                        <div class="border border-gray-300 dark:border-zinc-600 rounded-lg max-h-40 overflow-y-auto bg-gray-50 dark:bg-zinc-800 p-2">
                             @foreach($allDepartments as $dept)
-                                <label class="flex items-center gap-2 p-2 hover:bg-blue-50 rounded cursor-pointer">
+                                <label class="flex items-center gap-2 p-2 hover:bg-blue-50 dark:bg-blue-500/10 dark:hover:bg-blue-50 dark:bg-blue-500/100/15 rounded cursor-pointer">
                                     <input 
                                         type="checkbox" 
                                         wire:model="departments" 
                                         value="{{ $dept->id }}"
-                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        class="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-zinc-600 rounded focus:ring-blue-500">
                                     <span class="text-sm">{{ $dept->name }} ({{ $dept->Abbreviation }})</span>
                                 </label>
                             @endforeach
@@ -204,15 +204,15 @@
 
                     {{-- Year Levels --}}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Year Levels (Optional - leave empty for all years)</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-200 mb-2">Year Levels (Optional - leave empty for all years)</label>
                         <div class="grid grid-cols-3 gap-2">
                             @foreach([1, 2, 3, 4, 5, 6] as $level)
-                                <label class="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                                <label class="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 dark:hover:bg-zinc-800 dark:bg-zinc-800 cursor-pointer">
                                     <input 
                                         type="checkbox" 
                                         wire:model="year_levels" 
                                         value="{{ $level }}"
-                                        class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        class="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-zinc-600 rounded focus:ring-blue-500">
                                     <span class="text-sm">Year {{ $level }}</span>
                                 </label>
                             @endforeach
@@ -226,8 +226,8 @@
                             type="checkbox" 
                             wire:model="is_active" 
                             id="is_active"
-                            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <label for="is_active" class="text-sm font-medium text-gray-700">Active</label>
+                            class="w-4 h-4 text-blue-600 dark:text-blue-400 border-gray-300 dark:border-zinc-600 rounded focus:ring-blue-500">
+                        <label for="is_active" class="text-sm font-medium text-gray-700 dark:text-zinc-200">Active</label>
                     </div>
 
                     {{-- Buttons --}}
@@ -235,7 +235,7 @@
                         <button 
                             type="button"
                             wire:click="$set('showAddModal', false)" 
-                            class="px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded hover:bg-gray-300">
+                            class="px-4 py-2 text-sm text-gray-700 dark:text-zinc-200 bg-gray-200 rounded hover:bg-gray-300">
                             Cancel
                         </button>
                         <button 

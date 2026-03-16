@@ -5,7 +5,7 @@
     {{-- ─── PAGE HEADER ───────────────────────────────────────────────── --}}
     <div>
         <h1 class="text-2xl font-bold text-gray-800">
-            Welcome back, {{ $user->GetTheUserName() ?: $user->email }} 👋
+            <flux:heading size="xl" level="1">Welcome Back, {{ $user->GetTheUserName() ?: $user->email }} 👋</flux:heading>
         </h1>
         <p class="text-sm text-gray-500 mt-1">
             @if($activePeriod)

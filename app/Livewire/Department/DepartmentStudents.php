@@ -15,6 +15,9 @@ class DepartmentStudents extends Component
     public $departmentId;
     public $selectedStudent;
     public $showViewModal = false;
+    public $searchQuery = '';
+    public $yearLevelFilter = '';
+    public $availableYearLevels = [1, 2, 3, 4];
 
     public function mount($departmentId)
     {
@@ -53,11 +56,32 @@ class DepartmentStudents extends Component
         $this->dispatch('close-modal', name: 'view-student-modal');
     }
 
+    public function clearFilters()
+    {
+        $this->searchQuery = '';
+        $this->yearLevelFilter = '';
+    }
+
     public function render()
     {
         $students = StudentDetail::where('department_id', $this->departmentId)
             ->with('user')
+            ->when($this->yearLevelFilter !== '', function ($query) {
+                $query->where('year_level', $this->yearLevelFilter);
+            })
+            ->when($this->searchQuery, function ($query) {
+                $search = '%' . $this->searchQuery . '%';
+
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('first_name', 'like', $search)
+                        ->orWhere('last_name', 'like', $search)
+                        ->orWhere('student_id', 'like', $search)
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$search]);
+                });
+            })
             ->orderBy('year_level', 'ASC')
+            ->orderBy('last_name', 'ASC')
+            ->orderBy('first_name', 'ASC')
             ->get();
 
         return view('livewire.department.department-students', compact('students'));
