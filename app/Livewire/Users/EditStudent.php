@@ -18,7 +18,7 @@ class EditStudent extends Component
     public function updatedStudentId($value)
     {
         $sanitized = preg_replace('/[^0-9-]/', '', (string) $value);
-        $this->student_id = substr($sanitized, 0, 6);
+        $this->student_id = substr($sanitized, 0, 8);
     }
 
     public function mount ($id){

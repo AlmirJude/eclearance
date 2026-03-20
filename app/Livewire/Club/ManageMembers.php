@@ -309,8 +309,8 @@ class ManageMembers extends Component
                 continue;
             }
 
-            if (strlen($studentId) > 6) {
-                $errors[] = "Row {$row}: student_id must not exceed 6 characters";
+            if (strlen($studentId) > 8) {
+                $errors[] = "Row {$row}: student_id must not exceed 8 characters";
                 $skipped++;
                 continue;
             }

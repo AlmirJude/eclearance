@@ -156,7 +156,7 @@ class StudentIndex extends Component
             $rowErrors = [];
 
             if (!$studentId) $rowErrors[] = 'student_id is empty';
-            elseif (strlen($studentId) > 6) $rowErrors[] = 'student_id must not exceed 6 characters';
+            elseif (strlen($studentId) > 8) $rowErrors[] = 'student_id must not exceed 8 characters';
             elseif (!preg_match('/^[0-9-]+$/', $studentId)) $rowErrors[] = 'student_id may only contain numbers and dashes';
             if (!$email)     $rowErrors[] = 'email is empty';
             elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $rowErrors[] = 'email is invalid';
