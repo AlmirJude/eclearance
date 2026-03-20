@@ -16,32 +16,32 @@
     <div class="mt-4 flex flex-wrap items-center gap-3">
         <div class="relative">
             <input type="text"
-                   wire:model.live.debounce.300ms="searchQuery"
-                   placeholder="Search name or student ID..."
-                   class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 w-64 bg-white" />
-            <svg class="absolute left-2.5 top-2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                wire:model.live.debounce.300ms="searchQuery"
+                placeholder="Search name or student ID..."
+                class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 w-64 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400" />
+            <svg class="absolute left-2.5 top-2 h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
         </div>
 
         <select wire:model.live="yearLevelFilter"
-                class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm bg-white">
-            <option value="">All Year Levels</option>
+                class="rounded-lg border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+            <option value="" class="dark:bg-gray-700">All Year Levels</option>
             @foreach($availableYearLevels as $year)
-                <option value="{{ $year }}">Year {{ $year }}</option>
+                <option value="{{ $year }}" class="dark:bg-gray-700">Year {{ $year }}</option>
             @endforeach
         </select>
 
         @if($searchQuery || $yearLevelFilter !== '')
-            <button wire:click="clearFilters" class="text-sm text-blue-600 hover:text-blue-800 underline">
+            <button wire:click="clearFilters" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline">
                 Clear Filters
             </button>
         @endif
     </div>
 
-    <div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white">
-        <table class="min-w-full border-collapse text-sm text-left text-gray-700">
-            <thead class="bg-gray-100 text-xs uppercase font-semibold text-gray-600">
+    <div class="mt-4 overflow-x-auto rounded-2xl shadow-md bg-white dark:bg-gray-800">
+        <table class="min-w-full border-collapse text-sm text-left text-gray-700 dark:text-gray-200">
+            <thead class="bg-gray-100 dark:bg-gray-900 text-xs uppercase font-semibold text-gray-600 dark:text-gray-400">
                 <tr>
                     <th scope="col" class="px-6 py-3">User ID</th>
                     <th scope="col" class="px-6 py-3">Name</th>
@@ -49,87 +49,88 @@
                     <th scope="col" class="px-6 py-3">Year Level</th>
                     <th scope="col" class="px-6 py-3 w-80">Actions</th>
                 </tr>
-                </thead>
-                <tbody>
+            </thead>
+            <tbody>
                 @forelse ($students as $student)
-                    <tr class="border-b hover:bg-gray-50 transition">
-                        <td class="px-6 py-2">{{$student -> student_id}}</td>
-                        <td class="px-6 py-2">{{$student -> fullname}}</td>
-                        <td class="px-6 py-2">{{$student -> department_name ?? 'N/A'}}</td>
-                        <td class="px-6 py-2">{{$student -> year_level}}</td>
+                    <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        <td class="px-6 py-2">{{ $student->student_id }}</td>
+                        <td class="px-6 py-2">{{ $student->fullname }}</td>
+                        <td class="px-6 py-2">{{ $student->department_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-2">{{ $student->year_level }}</td>
 
-                        <td class="px-6 py-2 ">
+                        <td class="px-6 py-2 space-x-1">
                             @if(in_array(auth()->user()->role, ['superadmin', 'admin']))
-                                <button wire:click='confirmDelete({{$student->id}})' class="px-3 py-2 text-xs text-white bg-red-600 rounded hover:bg-red-700">Delete</button>
-                                <a href="{{route("edit.students", $student->user_id)}}" class="px-3 py-2 text-xs text-white bg-blue-600 rounded hover:bg-blue-700">Edit</a>
+                                <button wire:click='confirmDelete({{ $student->id }})' 
+                                        class="px-3 py-2 text-xs text-white bg-red-600 dark:bg-red-700 rounded hover:bg-red-700 dark:hover:bg-red-800">Delete</button>
+                                <a href="{{ route("edit.students", $student->user_id) }}" 
+                                class="px-3 py-2 text-xs text-white bg-blue-600 dark:bg-blue-700 rounded hover:bg-blue-700 dark:hover:bg-blue-800">Edit</a>
                             @endif  
-                        <button wire:click='view({{$student->id}})' class="px-3 py-2 text-xs text-white bg-green-600 rounded hover:bg-green-700">View</button>
+                            <button wire:click='view({{ $student->id }})' 
+                                    class="px-3 py-2 text-xs text-white bg-green-600 dark:bg-green-700 rounded hover:bg-green-700 dark:hover:bg-green-800">View</button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-6 text-center text-gray-500">
+                        <td colspan="5" class="px-6 py-6 text-center text-gray-500 dark:text-gray-400">
                             No students found for the selected filters.
                         </td>
                     </tr>
                 @endforelse
-                </tbody>
+            </tbody>
         </table>
     </div>
 
     {{-- View Modal --}}
     @if($selectedStudent)
-        <flux:modal name="view-student-modal" variant="flyout" class="md:w-96 space-y-6" wire:model="showViewModal">
-            <div>
+        <flux:modal name="view-student-modal" variant="flyout" class="md:w-96 space-y-6 bg-white dark:bg-gray-800" wire:model="showViewModal">
+            <div class="text-gray-900 dark:text-gray-100">
                 <flux:heading size="lg">Student Details</flux:heading>
-                <flux:subheading>View student information</flux:subheading>
+                <flux:subheading class="text-gray-600 dark:text-gray-400">View student information</flux:subheading>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-4 text-gray-900 dark:text-gray-100">
                 <div>
-                    <flux:subheading class="text-xs text-gray-500">Student ID</flux:subheading>
+                    <flux:subheading class="text-xs text-gray-500 dark:text-gray-400">Student ID</flux:subheading>
                     <p class="text-sm font-medium">{{ $selectedStudent->student_id }}</p>
                 </div>
 
-                <flux:separator variant="subtle" />
+                <flux:separator variant="subtle" class="dark:border-gray-700" />
 
                 <div>
-                    <flux:subheading class="text-xs text-gray-500">Full Name</flux:subheading>
+                    <flux:subheading class="text-xs text-gray-500 dark:text-gray-400">Full Name</flux:subheading>
                     <p class="text-sm font-medium">{{ $selectedStudent->fullname }}</p>
                 </div>
 
-                <flux:separator variant="subtle" />
+                <flux:separator variant="subtle" class="dark:border-gray-700" />
 
                 <div>
-                    <flux:subheading class="text-xs text-gray-500">Email</flux:subheading>
+                    <flux:subheading class="text-xs text-gray-500 dark:text-gray-400">Email</flux:subheading>
                     <p class="text-sm font-medium">{{ $selectedStudent->user->email }}</p>
                 </div>
 
-                <flux:separator variant="subtle" />
+                <flux:separator variant="subtle" class="dark:border-gray-700" />
 
                 <div>
-                    <flux:subheading class="text-xs text-gray-500">Department</flux:subheading>
+                    <flux:subheading class="text-xs text-gray-500 dark:text-gray-400">Department</flux:subheading>
                     <p class="text-sm font-medium">{{ $selectedStudent->department_name ?? 'N/A' }}</p>
                 </div>
 
                 <div>
-                    <flux:subheading class="text-xs text-gray-500">Year Level</flux:subheading>
+                    <flux:subheading class="text-xs text-gray-500 dark:text-gray-400">Year Level</flux:subheading>
                     <p class="text-sm font-medium">{{ $selectedStudent->year_level ?? 'N/A' }}</p>
                 </div>
 
-
-
-
-                <flux:separator variant="subtle" />
+                <flux:separator variant="subtle" class="dark:border-gray-700" />
+                
                 <div>
-                    <flux:subheading class="text-xs text-gray-500">Created At</flux:subheading>
+                    <flux:subheading class="text-xs text-gray-500 dark:text-gray-400">Created At</flux:subheading>
                     <p class="text-sm font-medium">{{ $selectedStudent->created_at->format('M d, Y h:i A') }}</p>
                 </div>
             </div>
 
             <div class="flex gap-2 justify-end">
-                <flux:button variant="ghost" wire:click="closeModalViewStudent">Close</flux:button>
-                <flux:button variant="primary" href="{{ route('edit.students', $selectedStudent->user_id) }}">Edit</flux:button>
+                <flux:button variant="ghost" wire:click="closeModalViewStudent" class="dark:text-gray-300 dark:hover:text-white">Close</flux:button>
+                <flux:button variant="primary" href="{{ route('edit.students', $selectedStudent->user_id) }}" class="dark:bg-blue-700 dark:hover:bg-blue-800">Edit</flux:button>
             </div>
         </flux:modal>
     @endif
