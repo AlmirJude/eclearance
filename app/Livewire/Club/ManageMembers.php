@@ -8,6 +8,7 @@ use App\Models\StudentDetail;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Livewire\Attributes\Layout; // 1. Add this import
@@ -38,6 +39,27 @@ class ManageMembers extends Component
     {
         $this->clubId = $id;
         $this->loadClubData();
+        $this->authorizeAccess();
+    }
+
+    protected function authorizeAccess()
+    {
+        $user = Auth::user();
+
+        if (in_array($user->role, ['superadmin', 'admin'])) {
+            return;
+        }
+
+        $isModerator = $this->club->moderator_id === $user->id;
+        $isSignatory = DB::table('club_signatories')
+            ->where('club_id', $this->clubId)
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->exists();
+
+        if (!$isModerator && !$isSignatory) {
+            abort(403, 'You are not authorized to manage members for this club.');
+        }
     }
 
     public function loadClubData()
@@ -195,6 +217,21 @@ class ManageMembers extends Component
             ->delete();
 
         session()->flash('success', 'Member removed successfully.');
+        $this->loadClubData();
+    }
+
+    public function removeAllMembers()
+    {
+        $removedCount = DB::table('club_memberships')
+            ->where('club_id', $this->clubId)
+            ->delete();
+
+        if ($removedCount === 0) {
+            session()->flash('error', 'No members to remove.');
+            return;
+        }
+
+        session()->flash('success', 'All members were removed successfully.');
         $this->loadClubData();
     }
 

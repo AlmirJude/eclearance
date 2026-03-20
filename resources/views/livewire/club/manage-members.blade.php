@@ -32,6 +32,13 @@
         <button wire:click="downloadSampleCsv" class="px-3 py-2 text-xs text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200">
             Download Template
         </button>
+        <button
+            wire:click="removeAllMembers"
+            wire:confirm="Are you sure you want to remove ALL members from this club? This action cannot be undone."
+            @disabled($members->isEmpty())
+            class="px-3 py-2 text-xs text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            Remove All Members
+        </button>
     </div>
 
     {{-- Members Count --}}
