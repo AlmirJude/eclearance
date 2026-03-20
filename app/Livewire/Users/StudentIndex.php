@@ -156,6 +156,8 @@ class StudentIndex extends Component
             $rowErrors = [];
 
             if (!$studentId) $rowErrors[] = 'student_id is empty';
+            elseif (strlen($studentId) > 6) $rowErrors[] = 'student_id must not exceed 6 characters';
+            elseif (!preg_match('/^[0-9-]+$/', $studentId)) $rowErrors[] = 'student_id may only contain numbers and dashes';
             if (!$email)     $rowErrors[] = 'email is empty';
             elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $rowErrors[] = 'email is invalid';
             if (strlen($password) < 8)  $rowErrors[] = 'password must be at least 8 characters';
@@ -262,8 +264,8 @@ class StudentIndex extends Component
     public function downloadSampleCsv()
     {
         $csv = "student_id,email,password,first_name,last_name,department,year_level\n";
-        $csv .= "2021-00001,juan.delacruz@school.edu,password123,Juan,Dela Cruz,BSCS,1\n";
-        $csv .= "2021-00002,maria.santos@school.edu,password123,Maria,Santos,BSIT,2\n";
+        $csv .= "21-001,juan.delacruz@school.edu,password123,Juan,Dela Cruz,BSCS,1\n";
+        $csv .= "21-002,maria.santos@school.edu,password123,Maria,Santos,BSIT,2\n";
 
         return response()->streamDownload(function () use ($csv) {
             echo $csv;

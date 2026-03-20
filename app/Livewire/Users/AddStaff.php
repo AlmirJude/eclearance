@@ -27,7 +27,14 @@ class AddStaff extends Component
     {
         return [
             //User validation
-            'employee_id' => 'required|string|max:255|unique:users,user_id|unique:staff_details,employee_id',
+            'employee_id' => [
+                'required',
+                'string',
+                'max:6',
+                'regex:/^(?:NT|BED|HED)-?[0-9]+$/i',
+                'unique:users,user_id',
+                'unique:staff_details,employee_id',
+            ],
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|min:8|same:confirmPassword',
             'confirmPassword' => 'required',
@@ -40,7 +47,21 @@ class AddStaff extends Component
         ];
     }
 
+    protected $messages = [
+        'employee_id.required' => 'Employee ID is required',
+        'employee_id.max' => 'Employee ID must not exceed 6 characters',
+        'employee_id.regex' => 'Employee ID must start with NT, BED, or HED and contain only numbers after that (optional dash allowed)',
+        'employee_id.unique' => 'This Employee ID already exists',
+    ];
+
+    public function updatedEmployeeId($value)
+    {
+        $sanitized = strtoupper(preg_replace('/[^A-Z0-9-]/i', '', (string) $value));
+        $this->employee_id = substr($sanitized, 0, 6);
+    }
+
     public function submit() {
+        $this->updatedEmployeeId($this->employee_id);
         $this->validate();
 
         try {

@@ -124,7 +124,7 @@ class StaffIndex extends Component
             $data   = array_pad(array_map(fn($v) => trim((string) $v), $data), count($header), '');
             $record = array_combine($header, $data);
 
-            $employeeId = $record['employee_id'] ?? '';
+            $employeeId = strtoupper(trim($record['employee_id'] ?? ''));
             $email      = $record['email']       ?? '';
             $password   = $record['password']    ?? '';
             $firstName  = $record['first_name']  ?? '';
@@ -134,9 +134,9 @@ class StaffIndex extends Component
 
             // Auto-detect employee_type from employee_id
             $empIdUpper   = strtoupper($employeeId);
-            if (str_contains($empIdUpper, 'HED') || str_contains($empIdUpper, 'BED')) {
+            if (str_starts_with($empIdUpper, 'HED') || str_starts_with($empIdUpper, 'BED')) {
                 $employeeType = 'teaching';
-            } elseif (str_contains($empIdUpper, 'NT')) {
+            } elseif (str_starts_with($empIdUpper, 'NT')) {
                 $employeeType = 'non-teaching';
             } else {
                 $employeeType = null;
@@ -146,6 +146,8 @@ class StaffIndex extends Component
             $rowErrors = [];
 
             if (!$employeeId) $rowErrors[] = 'employee_id is empty';
+            elseif (strlen($employeeId) > 6) $rowErrors[] = 'employee_id must not exceed 6 characters';
+            elseif (!preg_match('/^(?:NT|BED|HED)-?[0-9]+$/i', $employeeId)) $rowErrors[] = 'employee_id must start with NT, BED, or HED and contain numbers after that (optional dash allowed)';
             if (!$email)      $rowErrors[] = 'email is empty';
             elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $rowErrors[] = 'email is invalid';
             if (strlen($password) < 8)  $rowErrors[] = 'password must be at least 8 characters';
@@ -239,8 +241,9 @@ class StaffIndex extends Component
     public function downloadSampleCsv()
     {
         $csv  = "employee_id,email,password,first_name,last_name,department,position\n";
-        $csv .= "HED-00001,juan.delacruz@school.edu,password123,Juan,Dela Cruz,IT Department,Teacher\n";
-        $csv .= "NT-00001,maria.santos@school.edu,password123,Maria,Santos,Admin Office,Registrar\n";
+        $csv .= "HED001,juan.delacruz@school.edu,password123,Juan,Dela Cruz,IT Department,Teacher\n";
+        $csv .= "BED001,anna.reyes@school.edu,password123,Anna,Reyes,Basic Education,Teacher\n";
+        $csv .= "NT0001,maria.santos@school.edu,password123,Maria,Santos,Admin Office,Registrar\n";
 
         return response()->streamDownload(function () use ($csv) {
             echo $csv;

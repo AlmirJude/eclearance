@@ -309,6 +309,18 @@ class ManageMembers extends Component
                 continue;
             }
 
+            if (strlen($studentId) > 6) {
+                $errors[] = "Row {$row}: student_id must not exceed 6 characters";
+                $skipped++;
+                continue;
+            }
+
+            if (!preg_match('/^[0-9-]+$/', $studentId)) {
+                $errors[] = "Row {$row}: student_id may only contain numbers and dashes";
+                $skipped++;
+                continue;
+            }
+
             // Look up the student by their student_id string
             $studentDetail = StudentDetail::where('student_id', $studentId)->first();
 
@@ -389,8 +401,8 @@ class ManageMembers extends Component
     public function downloadSampleCsv()
     {
         $csv  = "student_id\n";
-        $csv .= "2021-00001\n";
-        $csv .= "2021-00002\n";
+        $csv .= "21-001\n";
+        $csv .= "21-002\n";
 
         return response()->streamDownload(function () use ($csv) {
             echo $csv;

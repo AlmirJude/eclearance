@@ -15,6 +15,12 @@ class EditStudent extends Component
     public $student_id, $email, $password, $confirmPassword;
     public $first_name, $last_name, $department_id, $year_level;
 
+    public function updatedStudentId($value)
+    {
+        $sanitized = preg_replace('/[^0-9-]/', '', (string) $value);
+        $this->student_id = substr($sanitized, 0, 6);
+    }
+
     public function mount ($id){
         $user = User::findOrFail($id);
         $student = StudentDetail::where('user_id', $user->id)->firstOrFail();

@@ -14,7 +14,8 @@
         {{-- Account Information Section --}}
         <div class="space-y-4">
             <flux:heading size="lg">Account Information</flux:heading>            
-            <flux:input wire:model='employee_id' label="Employee ID" placeholder="Employee ID (will be used as login ID)" />            
+            <flux:input wire:model.live='employee_id' label="Employee ID" placeholder="Employee ID (will be used as login ID)" maxlength="6" oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 6)" />
+            @error('employee_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             <flux:input wire:model='email' label="Email" type="email" placeholder="Email" />            
             <flux:input wire:model='password' label="Password" type="password" placeholder="Password" />           
             <flux:input wire:model='confirmPassword' label="Confirm Password" type="password" placeholder="Confirm Password" />

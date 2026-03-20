@@ -91,7 +91,8 @@
                     Upload a <strong>CSV</strong> (.csv) or <strong>Excel</strong> (.xlsx, .xls) file with columns:
                     <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded text-xs">employee_id, email, password, first_name, last_name, department, position</code>.
                     <code>department</code> and <code>position</code> are optional. Role is automatically set to <strong>staff</strong>.
-                    Employee type is auto-detected from the ID: <code>HED</code>/<code>BED</code> → teaching, <code>NT</code> → non-teaching.
+                    <code>employee_id</code> must be max 6 characters and start with <code>HED</code>, <code>BED</code>, or <code>NT</code> (optional dash, then numbers).
+                    Employee type is auto-detected from the ID prefix: <code>HED</code>/<code>BED</code> → teaching, <code>NT</code> → non-teaching.
                 </flux:text>
             </div>
 

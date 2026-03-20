@@ -29,7 +29,7 @@ class AddStudent extends Component
     {
         return [
             // User validation
-            'student_id' => 'required|string|max:255|unique:users,user_id|unique:student_details,student_id',
+            'student_id' => 'required|string|max:6|regex:/^[0-9-]+$/|unique:users,user_id|unique:student_details,student_id',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|min:8|same:confirmPassword',
             'confirmPassword' => 'required',
@@ -44,6 +44,8 @@ class AddStudent extends Component
 
     protected $messages = [
         'student_id.required' => 'Student ID is required',
+        'student_id.max' => 'Student ID must not exceed 6 characters',
+        'student_id.regex' => 'Student ID may only contain numbers and dashes',
         'student_id.unique' => 'This Student ID already exists',
         'email.required' => 'Email is required',
         'email.email' => 'Please enter a valid email',
@@ -55,6 +57,12 @@ class AddStudent extends Component
         'last_name.required' => 'Last name is required',
         'year_level.required' => 'Year level is required',
     ];
+
+    public function updatedStudentId($value)
+    {
+        $sanitized = preg_replace('/[^0-9-]/', '', (string) $value);
+        $this->student_id = substr($sanitized, 0, 6);
+    }
 
     public function submit()
     {

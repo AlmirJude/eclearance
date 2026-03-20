@@ -22,7 +22,7 @@
         <div class="space-y-4">
             <flux:heading size="lg">Account Information</flux:heading>
             
-            <flux:input wire:model='student_id' label="Student ID" placeholder="Student ID (will be used as login ID)" />
+            <flux:input wire:model.live='student_id' label="Student ID" placeholder="Student ID (will be used as login ID)" inputmode="numeric" pattern="[0-9-]*" maxlength="6" oninput="this.value = this.value.replace(/[^0-9-]/g, '').slice(0, 6)" />
             @error('student_id') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
             
             <flux:input wire:model='email' label="Email" type="email" placeholder="Email" />
