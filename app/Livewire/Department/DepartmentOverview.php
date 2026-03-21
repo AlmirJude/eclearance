@@ -3,13 +3,20 @@
 namespace App\Livewire\Department;
 
 use App\Models\Department;
+use App\Models\ClearanceItem;
 use App\Models\ClearancePeriod;
 use App\Models\ClearanceRequest;
 use App\Models\StudentDetail;
 use Livewire\Component;
+use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout; // 1. Add this import
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 #[Layout('components.layouts.app')] // 
 class DepartmentOverview extends Component
@@ -139,9 +146,27 @@ class DepartmentOverview extends Component
             return;
         }
 
+        $this->yearLevelDetails = $this->getYearLevelDetails($yearLevel);
+    }
+
+    protected function getYearLevelDetails($yearLevel): array
+    {
+        if (!$this->activePeriod) {
+            return [];
+        }
+
         $students = StudentDetail::where('department_id', $this->departmentId)
             ->where('year_level', $yearLevel)
             ->get();
+
+        return $this->buildStudentDetails($students);
+    }
+
+    protected function buildStudentDetails(Collection $students, bool $sortByStatus = true): array
+    {
+        if ($students->isEmpty()) {
+            return [];
+        }
 
         $studentUserIds = $students->pluck('user_id')->toArray();
 
@@ -152,7 +177,7 @@ class DepartmentOverview extends Component
 
         $requestIds = $requests->pluck('id')->toArray();
 
-        $deptItems = \App\Models\ClearanceItem::whereIn('request_id', $requestIds)
+        $deptItems = ClearanceItem::whereIn('request_id', $requestIds)
             ->where('signable_type', 'App\\Models\\Department')
             ->where('signable_id', $this->departmentId)
             ->where('status', 'approved')
@@ -183,6 +208,7 @@ class DepartmentOverview extends Component
 
             return [
                 'name'                   => $student->first_name . ' ' . $student->last_name,
+                'year_level'             => $student->year_level,
                 'student_id'             => $student->student_id,
                 'clearance_completed'    => $clearanceCompleted,
                 'clearance_completed_at' => $clearanceCompleted && $request->completed_at
@@ -194,9 +220,142 @@ class DepartmentOverview extends Component
                 'request_status'         => $request?->status ?? 'none',
                 'sort_weight'            => $sortWeight,
             ];
-        })->sortBy('sort_weight')->values()->toArray();
+        });
 
-        $this->yearLevelDetails = $details;
+        if ($sortByStatus) {
+            return $details->sortBy('sort_weight')->values()->toArray();
+        }
+
+        return $details->values()->toArray();
+    }
+
+    public function exportYearLevelStudents($yearLevel): ?StreamedResponse
+    {
+        if (!$this->activePeriod) {
+            return null;
+        }
+
+        $details = $this->getYearLevelDetails($yearLevel);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Year ' . $yearLevel);
+
+        $headers = [
+            'Student',
+            'ID',
+            'Status',
+            'Dept. Signed At',
+            'Signed By',
+            'Clearance Completed At',
+        ];
+
+        foreach ($headers as $index => $header) {
+            $column = Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($column . '1', $header);
+        }
+
+        foreach ($details as $rowIndex => $detail) {
+            $status = $this->formatStatusLabel($detail);
+
+            $row = $rowIndex + 2;
+            $sheet->setCellValue('A' . $row, $detail['name']);
+            $sheet->setCellValue('B' . $row, $detail['student_id']);
+            $sheet->setCellValue('C' . $row, $status);
+            $sheet->setCellValue('D' . $row, $detail['dept_signed_at'] ?? '—');
+            $sheet->setCellValue('E' . $row, $detail['signed_by'] ?? '—');
+            $sheet->setCellValue('F' . $row, $detail['clearance_completed_at'] ?? '—');
+        }
+
+        foreach (range('A', 'F') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        $filename = sprintf(
+            '%s-year-%s-students-%s.xlsx',
+            Str::slug($this->department->name),
+            $yearLevel,
+            now()->format('Ymd_His')
+        );
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function exportDepartmentStudents(): ?StreamedResponse
+    {
+        if (!$this->activePeriod) {
+            return null;
+        }
+
+        $students = StudentDetail::where('department_id', $this->departmentId)
+            ->orderBy('year_level')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        $details = $this->buildStudentDetails($students, false);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('All Students');
+
+        $headers = [
+            'Student',
+            'ID',
+            'Status',
+            'Dept. Signed At',
+            'Signed By',
+            'Clearance Completed At',
+        ];
+
+        foreach ($headers as $index => $header) {
+            $column = Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($column . '1', $header);
+        }
+
+        foreach ($details as $rowIndex => $detail) {
+            $status = $this->formatStatusLabel($detail);
+
+            $row = $rowIndex + 2;
+            $sheet->setCellValue('A' . $row, $detail['name']);
+            $sheet->setCellValue('B' . $row, $detail['student_id']);
+            $sheet->setCellValue('C' . $row, $status);
+            $sheet->setCellValue('D' . $row, $detail['dept_signed_at'] ?? '—');
+            $sheet->setCellValue('E' . $row, $detail['signed_by'] ?? '—');
+            $sheet->setCellValue('F' . $row, $detail['clearance_completed_at'] ?? '—');
+        }
+
+        foreach (range('A', 'F') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        $filename = sprintf(
+            '%s-all-students-%s.xlsx',
+            Str::slug($this->department->name),
+            now()->format('Ymd_His')
+        );
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    protected function formatStatusLabel(array $detail): string
+    {
+        return match (true) {
+            $detail['clearance_completed'] => '✓ Completed',
+            $detail['dept_signed'] => '✓ Dept. Signed',
+            in_array($detail['request_status'], ['in_progress', 'pending'], true) => 'In Progress',
+            default => 'No Request',
+        };
     }
 
     public function render()

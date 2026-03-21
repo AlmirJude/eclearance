@@ -151,8 +151,15 @@
 
         {{-- Year Level Breakdown --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
                 <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Clearance Completion by Year Level</h4>
+                <button
+                    type="button"
+                    wire:click="exportAllStudents"
+                    class="inline-flex items-center px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition"
+                >
+                    Download Whole Club Excel
+                </button>
             </div>
             
             @if(count($yearLevelStats) === 0)
@@ -179,10 +186,16 @@
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach($yearLevelStats as $stat)
-                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                <tr class="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+                                    wire:click="selectYearLevel({{ $stat['year_level'] }})">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300">
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium
+                                            {{ $selectedYearLevel === $stat['year_level'] ? 'bg-purple-600 text-white' : 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300' }}">
                                             Year {{ $stat['year_level'] }}
+                                            <svg class="w-3.5 h-3.5 transition-transform {{ $selectedYearLevel === $stat['year_level'] ? 'rotate-180' : '' }}"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
@@ -212,6 +225,79 @@
                                         </div>
                                     </td>
                                 </tr>
+                                @if($selectedYearLevel === $stat['year_level'])
+                                    <tr>
+                                        <td colspan="7" class="px-0 pb-0 pt-0 bg-purple-50 dark:bg-purple-900/20">
+                                            <div class="px-6 py-4">
+                                                <div class="flex items-center justify-between gap-3 mb-3">
+                                                    <p class="text-xs font-semibold uppercase tracking-wide text-purple-700 dark:text-purple-300">
+                                                        Year {{ $stat['year_level'] }} — All Members
+                                                    </p>
+                                                    <button
+                                                        type="button"
+                                                        wire:click="exportYearLevelStudents({{ $stat['year_level'] }})"
+                                                        class="inline-flex items-center px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition"
+                                                    >
+                                                        Download Excel
+                                                    </button>
+                                                </div>
+
+                                                @if(count($yearLevelDetails) === 0)
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400 italic">No members found in this year level.</p>
+                                                @else
+                                                    <table class="min-w-full text-sm">
+                                                        <thead>
+                                                            <tr class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                                                <th class="pr-6 py-2 text-left">Student</th>
+                                                                <th class="pr-6 py-2 text-left">ID</th>
+                                                                <th class="pr-6 py-2 text-left">Status</th>
+                                                                <th class="pr-6 py-2 text-left">Club Signed At</th>
+                                                                <th class="pr-6 py-2 text-left">Signed By</th>
+                                                                <th class="py-2 text-left">Clearance Completed At</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-purple-100 dark:divide-purple-800">
+                                                            @foreach($yearLevelDetails as $detail)
+                                                                <tr class="hover:bg-purple-100/50 dark:hover:bg-purple-800/30">
+                                                                    <td class="pr-6 py-2 font-medium text-gray-900 dark:text-gray-100">{{ $detail['name'] }}</td>
+                                                                    <td class="pr-6 py-2 text-gray-600 dark:text-gray-400">{{ $detail['student_id'] }}</td>
+                                                                    <td class="pr-6 py-2">
+                                                                        @if($detail['clearance_completed'])
+                                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300">
+                                                                                ✓ Completed
+                                                                            </span>
+                                                                        @elseif($detail['unit_signed'])
+                                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300">
+                                                                                ✓ Club Signed
+                                                                            </span>
+                                                                        @elseif($detail['request_status'] === 'in_progress' || $detail['request_status'] === 'pending')
+                                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300">
+                                                                                In Progress
+                                                                            </span>
+                                                                        @else
+                                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                                                                                No Request
+                                                                            </span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="pr-6 py-2">
+                                                                        @if($detail['unit_signed'])
+                                                                            <span class="text-green-700 dark:text-green-400">{{ $detail['unit_signed_at'] ?? '—' }}</span>
+                                                                        @else
+                                                                            <span class="text-gray-400 dark:text-gray-500">—</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="pr-6 py-2 text-gray-600 dark:text-gray-400">{{ $detail['signed_by'] ?? '—' }}</td>
+                                                                    <td class="py-2 text-gray-600 dark:text-gray-400">{{ $detail['clearance_completed_at'] ?? '—' }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>

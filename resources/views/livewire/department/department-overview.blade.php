@@ -114,8 +114,15 @@
 
         {{-- Year Level Breakdown --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
                 <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Clearance Completion by Year Level</h4>
+                <button
+                    type="button"
+                    wire:click="exportDepartmentStudents"
+                    class="inline-flex items-center px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition"
+                >
+                    Download Whole Department Excel
+                </button>
             </div>
             
             @if(count($yearLevelStats) === 0)
@@ -181,9 +188,18 @@
                                     <tr>
                                         <td colspan="7" class="px-0 pb-0 pt-0 bg-indigo-50 dark:bg-indigo-900/20">
                                             <div class="px-6 py-4">
-                                                <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300 mb-3">
-                                                    Year {{ $stat['year_level'] }} — All Students
-                                                </p>
+                                                <div class="flex items-center justify-between gap-3 mb-3">
+                                                    <p class="text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300">
+                                                        Year {{ $stat['year_level'] }} — All Students
+                                                    </p>
+                                                    <button
+                                                        type="button"
+                                                        wire:click="exportYearLevelStudents({{ $stat['year_level'] }})"
+                                                        class="inline-flex items-center px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium transition"
+                                                    >
+                                                        Download Excel
+                                                    </button>
+                                                </div>
                                                 @if(count($yearLevelDetails) === 0)
                                                     <p class="text-sm text-gray-500 dark:text-gray-400 italic">No students found in this year level.</p>
                                                 @else
