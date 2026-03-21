@@ -112,19 +112,9 @@ class ClubOverview extends Component
         if (!$this->activePeriod) {
             return;
         }
-        
-        // Get all members of this club
-        $memberUserIds = $this->club->members->pluck('id')->toArray();
-        
-        // Apply department filter if selected
-        if ($this->departmentFilter) {
-            $memberUserIds = StudentDetail::whereIn('user_id', $memberUserIds)
-                ->where('department_id', $this->departmentFilter)
-                ->pluck('user_id')
-                ->toArray();
-        }
-        
-        $this->totalMembers = count($memberUserIds);
+
+        $members = $this->getScopedStudentsQuery()->get();
+        $this->totalMembers = $members->count();
         
         if ($this->totalMembers === 0) {
             $this->completedCount = 0;
@@ -135,40 +125,42 @@ class ClubOverview extends Component
             $this->yearLevelStats = [];
             return;
         }
-        
-        // Get clearance requests for these members in the active period
-        $requests = ClearanceRequest::whereIn('student_id', $memberUserIds)
-            ->where('period_id', $this->activePeriod->id)
-            ->get();
-        
-        $this->completedCount = $requests->where('status', 'completed')->count();
-        $this->inProgressCount = $requests->where('status', 'in_progress')->count();
-        $this->pendingCount = $requests->where('status', 'pending')->count();
-        $this->noRequestCount = $this->totalMembers - $requests->count();
+
+        $details = collect($this->buildStudentDetails($members, false));
+
+        $this->completedCount = $details
+            ->where('unit_signed', true)
+            ->count();
+
+        $this->inProgressCount = $details
+            ->filter(fn($detail) => !$detail['unit_signed'] && $detail['request_status'] === 'in_progress')
+            ->count();
+
+        $this->pendingCount = $details
+            ->filter(fn($detail) => !$detail['unit_signed'] && $detail['request_status'] === 'pending')
+            ->count();
+
+        $this->noRequestCount = $details
+            ->where('request_status', 'none')
+            ->count();
         
         $this->completionPercentage = round(($this->completedCount / $this->totalMembers) * 100, 1);
         
-        // Year level breakdown - get student details for members
+        // Year level breakdown
         $this->yearLevelStats = [];
-        $memberDetails = StudentDetail::whereIn('user_id', $memberUserIds)->get();
-        $yearLevels = $memberDetails->groupBy('year_level');
+        $yearLevels = $details->groupBy('year_level');
         
         foreach ($yearLevels as $yearLevel => $students) {
-            $yearStudentIds = $students->pluck('user_id')->toArray();
-            $yearRequests = ClearanceRequest::whereIn('student_id', $yearStudentIds)
-                ->where('period_id', $this->activePeriod->id)
-                ->get();
-            
-            $yearCompleted = $yearRequests->where('status', 'completed')->count();
             $yearTotal = $students->count();
+            $yearCompleted = $students->where('unit_signed', true)->count();
             
             $this->yearLevelStats[] = [
                 'year_level' => $yearLevel,
                 'total' => $yearTotal,
                 'completed' => $yearCompleted,
-                'in_progress' => $yearRequests->where('status', 'in_progress')->count(),
-                'pending' => $yearRequests->where('status', 'pending')->count(),
-                'no_request' => $yearTotal - $yearRequests->count(),
+                'in_progress' => $students->filter(fn($detail) => !$detail['unit_signed'] && $detail['request_status'] === 'in_progress')->count(),
+                'pending' => $students->filter(fn($detail) => !$detail['unit_signed'] && $detail['request_status'] === 'pending')->count(),
+                'no_request' => $students->where('request_status', 'none')->count(),
                 'percentage' => $yearTotal > 0 ? round(($yearCompleted / $yearTotal) * 100, 1) : 0,
             ];
         }

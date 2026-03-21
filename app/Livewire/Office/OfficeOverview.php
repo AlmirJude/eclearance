@@ -104,17 +104,9 @@ class OfficeOverview extends Component
         if (!$this->activePeriod) {
             return;
         }
-        
-        // Get all students (offices handle clearance for all students)
-        $studentQuery = StudentDetail::query();
-        
-        // Apply department filter if selected
-        if ($this->departmentFilter) {
-            $studentQuery->where('department_id', $this->departmentFilter);
-        }
-        
-        $studentUserIds = $studentQuery->pluck('user_id')->toArray();
-        $this->totalStudents = count($studentUserIds);
+
+        $students = $this->getScopedStudentsQuery()->get();
+        $this->totalStudents = $students->count();
         
         if ($this->totalStudents === 0) {
             $this->completedCount = 0;
@@ -125,16 +117,24 @@ class OfficeOverview extends Component
             $this->yearLevelStats = [];
             return;
         }
-        
-        // Get clearance requests for these students in the active period
-        $requests = ClearanceRequest::whereIn('student_id', $studentUserIds)
-            ->where('period_id', $this->activePeriod->id)
-            ->get();
-        
-        $this->completedCount = $requests->where('status', 'completed')->count();
-        $this->inProgressCount = $requests->where('status', 'in_progress')->count();
-        $this->pendingCount = $requests->where('status', 'pending')->count();
-        $this->noRequestCount = $this->totalStudents - $requests->count();
+
+        $details = collect($this->buildStudentDetails($students, false));
+
+        $this->completedCount = $details
+            ->where('unit_signed', true)
+            ->count();
+
+        $this->inProgressCount = $details
+            ->filter(fn($detail) => !$detail['unit_signed'] && $detail['request_status'] === 'in_progress')
+            ->count();
+
+        $this->pendingCount = $details
+            ->filter(fn($detail) => !$detail['unit_signed'] && $detail['request_status'] === 'pending')
+            ->count();
+
+        $this->noRequestCount = $details
+            ->where('request_status', 'none')
+            ->count();
         
         $this->completionPercentage = $this->totalStudents > 0 
             ? round(($this->completedCount / $this->totalStudents) * 100, 1) 
@@ -142,25 +142,19 @@ class OfficeOverview extends Component
         
         // Year level breakdown
         $this->yearLevelStats = [];
-        $studentDetails = StudentDetail::whereIn('user_id', $studentUserIds)->get();
-        $yearLevels = $studentDetails->groupBy('year_level');
+        $yearLevels = $details->groupBy('year_level');
         
         foreach ($yearLevels as $yearLevel => $students) {
-            $yearStudentIds = $students->pluck('user_id')->toArray();
-            $yearRequests = ClearanceRequest::whereIn('student_id', $yearStudentIds)
-                ->where('period_id', $this->activePeriod->id)
-                ->get();
-            
-            $yearCompleted = $yearRequests->where('status', 'completed')->count();
             $yearTotal = $students->count();
+            $yearCompleted = $students->where('unit_signed', true)->count();
             
             $this->yearLevelStats[] = [
                 'year_level' => $yearLevel,
                 'total' => $yearTotal,
                 'completed' => $yearCompleted,
-                'in_progress' => $yearRequests->where('status', 'in_progress')->count(),
-                'pending' => $yearRequests->where('status', 'pending')->count(),
-                'no_request' => $yearTotal - $yearRequests->count(),
+                'in_progress' => $students->filter(fn($detail) => !$detail['unit_signed'] && $detail['request_status'] === 'in_progress')->count(),
+                'pending' => $students->filter(fn($detail) => !$detail['unit_signed'] && $detail['request_status'] === 'pending')->count(),
+                'no_request' => $students->where('request_status', 'none')->count(),
                 'percentage' => $yearTotal > 0 ? round(($yearCompleted / $yearTotal) * 100, 1) : 0,
             ];
         }
